@@ -44,6 +44,9 @@ app.*.map.json
 **/android/*.jks
 **/android/gradle-wrapper.jar
 **/android/.cxx/
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
 
 # iOS related
 **/ios/Flutter/.last_build_id
@@ -57,6 +60,8 @@ app.*.map.json
 **/ios/Runner.xcodeproj/project.xcworkspace/
 **/ios/Runner.xcodeproj/xcuserdata/
 **/ios/Runner.xcodeproj/project.pbxproj
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
 
 # macOS related
 **/macos/Flutter/ephemeral/
