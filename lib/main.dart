@@ -1,233 +1,160 @@
-import 'package:english_words/english_words.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:eleanor/features/media_library/providers/media_library_provider.dart';
+import 'package:eleanor/features/media_library/screens/media_library_screen.dart';
+import 'package:eleanor/core/widgets/custom_bottom_nav_bar.dart';
+import 'package:eleanor/features/media_library/screens/media_viewer_screen.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
-  runApp(MyApp());
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: '.env');
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) {
+        return MediaLibraryProvider();
+      },
+      child: const MyApp(),
+    ),
+  );
 }
+
+CustomTransitionPage<void> buildPageWithNoTransition<T>({
+  required BuildContext context,
+  required GoRouterState state,
+  required Widget child,
+}) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    child: child,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) => child,
+    transitionDuration: Duration.zero,
+    reverseTransitionDuration: Duration.zero,
+  );
+}
+
+final _router = GoRouter(
+  routes: [
+    GoRoute(
+      path: '/',
+      pageBuilder: (context, state) => buildPageWithNoTransition(
+        context: context,
+        state: state,
+        child: HomeScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/media-library',
+      pageBuilder: (context, state) => buildPageWithNoTransition(
+        context: context,
+        state: state,
+        child: MediaLibraryScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/food-journal',
+      pageBuilder: (context, state) => buildPageWithNoTransition(
+        context: context,
+        state: state,
+        child: FoodJournalScreen(),
+      ),
+    ),
+    GoRoute(
+      path: '/media/:id',
+      pageBuilder: (context, state) {
+        final String? id = state.pathParameters['id'];
+        if (id == null) {
+          return buildPageWithNoTransition(
+              context: context,
+              state: state,
+              child: const Scaffold(
+                  body: Center(child: Text('Error: Media ID missing'))));
+        }
+        return buildPageWithNoTransition(
+          context: context,
+          state: state,
+          child: MediaViewerScreen(
+            initialMediaId: id,
+          ),
+        );
+      },
+    ),
+  ],
+);
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) => MyAppState(),
-      child: MaterialApp(
-        title: 'Namer App',
-        theme: ThemeData(
-          useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        ),
-        home: MyHomePage(),
+    return MaterialApp.router(
+      title: 'Eleanor',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
       ),
-    );
-  }
-}
-
-class MyAppState extends ChangeNotifier {
-  var current = WordPair.random();
-  void getNext() {
-    current = WordPair.random();
-    notifyListeners();
-  }
-
-  var favorites = <WordPair>[];
-
-  void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
-    } else {
-      favorites.add(current);
-    }
-    notifyListeners();
-  }
-}
-
-// ...
-
-class MyHomePage extends StatefulWidget {
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  var selectedIndex = 0;
-  @override
-  Widget build(BuildContext context) {
-    Widget page;
-    switch (selectedIndex) {
-      case 0:
-        page = GeneratorPage();
-      case 1:
-        page = FavoritesPage();
-      default:
-        throw UnimplementedError('no widget for $selectedIndex');
-    }
-    return LayoutBuilder(builder: (context, constraints) {
-      final isWideScreen = constraints.maxWidth >= 600;
-      
-      if (isWideScreen) {
-        return Scaffold(
-          body: Row(
-            children: [
-              SafeArea(
-                child: NavigationRail(
-                  extended: constraints.maxWidth >= 800,
-                  destinations: [
-                    NavigationRailDestination(
-                      icon: Icon(Icons.home),
-                      label: Text('Home'),
-                    ),
-                    NavigationRailDestination(
-                      icon: Icon(Icons.favorite),
-                      label: Text('Favorites'),
-                    ),
-                  ],
-                  selectedIndex: selectedIndex,
-                  onDestinationSelected: (value) {
-                    setState(() {
-                      selectedIndex = value;
-                    });
-                  },
-                ),
-              ),
-              Expanded(
-                child: Container(
-                  color: Theme.of(context).colorScheme.primaryContainer,
-                  child: page,
-                ),
-              ),
-            ],
+      routerConfig: _router,
+      builder: (context, child) {
+        if (child == null) {
+          return const SizedBox.shrink();
+        }
+        return Center(
+          child: Container(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: child,
           ),
         );
-      } else {
-        return Scaffold(
-          body: Container(
-            color: Theme.of(context).colorScheme.primaryContainer,
-            child: page,
-          ),
-          bottomNavigationBar: NavigationBar(
-            selectedIndex: selectedIndex,
-            onDestinationSelected: (value) {
-              setState(() {
-                selectedIndex = value;
-              });
-            },
-            destinations: [
-              NavigationDestination(
-                icon: Icon(Icons.home),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.favorite),
-                label: 'Favorites',
-              ),
-            ],
-          ),
-        );
-      }
-    });
+      },
+    );
   }
 }
 
-class GeneratorPage extends StatelessWidget {
+class HomeScreen extends StatelessWidget {
+  HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-    var pair = appState.current;
-
-    IconData icon;
-    if (appState.favorites.contains(pair)) {
-      icon = Icons.favorite;
-    } else {
-      icon = Icons.favorite_border;
-    }
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          BigCard(pair: pair),
-          SizedBox(height: 10),
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ElevatedButton.icon(
-                onPressed: () {
-                  appState.toggleFavorite();
-                },
-                icon: Icon(icon),
-                label: Text('Like'),
-              ),
-              SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () {
-                  appState.getNext();
-                },
-                child: Text('Next'),
-              ),
-            ],
-          ),
-        ],
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Eleanor'),
       ),
-    );
-  }
-}
-
-class FavoritesPage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    var appState = context.watch<MyAppState>();
-
-    if (appState.favorites.isEmpty) {
-      return Center(
-        child: Text('No favorites yet.'),
-      );
-    }
-
-    return ListView(
-      children: [
-        Padding(
-          padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
-        ),
-        for (var pair in appState.favorites)
-          ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
-          ),
-      ],
-    );
-  }
-}
-
-class BigCard extends StatelessWidget {
-  const BigCard({
-    super.key,
-    required this.pair,
-  });
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-    return Card(
-      elevation: 8.0,
-      color: theme.colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(28.0),
-        child: Text(
-          pair.asLowerCase,
-          style: style,
-          semanticsLabel: "${pair.first} ${pair.second}",
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(minimumSize: const Size(200, 60)),
+              onPressed: () => context.go('/media-library'),
+              child: const Text('Media Library'),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(minimumSize: const Size(200, 60)),
+              onPressed: () => context.go('/food-journal'),
+              child: const Text('Food Journal'),
+            ),
+          ],
         ),
       ),
+      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),
+    );
+  }
+}
+
+class FoodJournalScreen extends StatelessWidget {
+  FoodJournalScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Food Journal'),
+      ),
+      body: const Center(
+        child: Text('Food Journal Coming Soon'),
+      ),
+      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 2),
     );
   }
 }

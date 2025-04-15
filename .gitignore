@@ -84,3 +84,6 @@ app.*.map.json
 
 # Linux related
 **/linux/flutter/ephemeral/
+
+explanation/
+.env
