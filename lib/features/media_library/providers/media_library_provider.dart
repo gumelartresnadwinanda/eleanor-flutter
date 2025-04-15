@@ -59,7 +59,7 @@ class MediaLibraryProvider with ChangeNotifier {
       return;
     }
     final String apiUrl =
-        '$baseUrl/medias?page=$_currentPage&limit=100&sort_order=desc&file_type=all';
+        '$baseUrl/medias?page=$_currentPage&limit=100&sort_order=desc&file_type=photo';
     developer.log(
       'Fetching media items from: $apiUrl',
       name: 'MediaLibraryProvider',

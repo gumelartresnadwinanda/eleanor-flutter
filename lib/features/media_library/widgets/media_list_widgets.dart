@@ -63,41 +63,55 @@ class MediaListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const double placeholderAspectRatio = 1.0;
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          AspectRatio(
-            aspectRatio: 1,
-            child: SizedBox(
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  Image.network(
-                    mediaItem.listThumbnail,
-                    fit: BoxFit.cover,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Container(color: Colors.grey[300]);
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Container(color: Colors.grey[300]);
-                    },
-                  ),
-                  if (mediaItem.fileType == MediaType.video)
-                    const Center(
-                      child: Icon(
-                        Icons.play_circle_outline,
-                        color: Colors.white,
-                        size: 48,
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Image.network(
+                mediaItem.listThumbnail,
+                fit: BoxFit.fitWidth,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return AspectRatio(
+                    aspectRatio: placeholderAspectRatio,
+                    child: Container(
+                      width: double.infinity, // Take full width
+                      color: Colors.grey[300],
+                      child: const Center(child: CircularProgressIndicator()),
+                    ),
+                  );
+                },
+                errorBuilder: (context, error, stackTrace) {
+                  return AspectRatio(
+                    aspectRatio: placeholderAspectRatio,
+                    child: Container(
+                      width: double.infinity, // Take full width
+                      color: Colors.grey[300],
+                      child: const Center(
+                        child: Icon(
+                          Icons.broken_image_outlined,
+                          color: Colors.black54,
+                        ),
                       ),
                     ),
-                ],
+                  );
+                },
               ),
-            ),
+              if (mediaItem.fileType == MediaType.video)
+                const Center(
+                  child: Icon(
+                    Icons.play_circle_outline,
+                    color: Colors.white,
+                    size: 48,
+                  ),
+                ),
+            ],
           ),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
