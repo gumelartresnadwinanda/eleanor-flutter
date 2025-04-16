@@ -6,20 +6,12 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:eleanor/features/auth/providers/auth_provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 enum ViewMode { grid, list }
 
 enum FileType { all, photo, video }
 
 class MediaLibraryProvider with ChangeNotifier {
-  static const String _viewModeKey = 'media_library_view_mode';
-  static const String _fileTypeKey = 'media_library_file_type';
-  static const String _mediaItemsKey = 'media_library_items';
-  static const String _currentPageKey = 'media_library_current_page';
-  static const String _hasNextPageKey = 'media_library_has_next_page';
-  static const String _currentTagKey = 'media_library_current_tag';
-
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -44,80 +36,25 @@ class MediaLibraryProvider with ChangeNotifier {
   FileType _fileType = FileType.all;
   FileType get fileType => _fileType;
 
-  bool _shouldRefresh = true;
-  String? _currentTag;
-
   MediaLibraryProvider() {
-    _loadPersistedState();
-  }
-
-  Future<void> _loadPersistedState() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Load view mode
-    final viewModeIndex = prefs.getInt(_viewModeKey);
-    if (viewModeIndex != null) {
-      _viewMode = ViewMode.values[viewModeIndex];
-    }
-
-    // Load file type
-    final fileTypeIndex = prefs.getInt(_fileTypeKey);
-    if (fileTypeIndex != null) {
-      _fileType = FileType.values[fileTypeIndex];
-    }
-
-    // Load current page
-    _currentPage = prefs.getInt(_currentPageKey) ?? 1;
-
-    // Load has next page
-    _hasNextPage = prefs.getBool(_hasNextPageKey) ?? true;
-
-    // Load current tag
-    _currentTag = prefs.getString(_currentTagKey);
-
-    // Load media items
-    final mediaItemsJson = prefs.getString(_mediaItemsKey);
-    if (mediaItemsJson != null) {
-      try {
-        final List<dynamic> decoded = json.decode(mediaItemsJson);
-        _mediaItems = decoded.map((item) => MediaItem.fromJson(item)).toList();
-      } catch (e) {
-        developer.log('Error loading persisted media items: $e');
-        _mediaItems = [];
-      }
-    }
-
-    notifyListeners();
-  }
-
-  Future<void> _persistState() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    await prefs.setInt(_viewModeKey, _viewMode.index);
-    await prefs.setInt(_fileTypeKey, _fileType.index);
-    await prefs.setInt(_currentPageKey, _currentPage);
-    await prefs.setBool(_hasNextPageKey, _hasNextPage);
-    await prefs.setString(_currentTagKey, _currentTag ?? '');
-
-    if (_mediaItems.isNotEmpty) {
-      final mediaItemsJson = json.encode(
-        _mediaItems.map((item) => item.toJson()).toList(),
-      );
-      await prefs.setString(_mediaItemsKey, mediaItemsJson);
-    }
+    _isLoading = false;
+    _mediaItems = [];
+    _errorMessage = null;
+    _viewMode = ViewMode.grid;
+    _currentPage = 1;
+    _hasNextPage = true;
+    _isFetchingMore = false;
+    _fileType = FileType.all;
   }
 
   void initializeData(BuildContext context, {String? tag}) {
-    if (_shouldRefresh || tag != _currentTag) {
-      _currentTag = tag;
-      _shouldRefresh = false;
+    if (_mediaItems.isEmpty || !_isLoading) {
       fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
     }
   }
 
   void toggleViewMode() {
     _viewMode = _viewMode == ViewMode.grid ? ViewMode.list : ViewMode.grid;
-    _persistState();
     notifyListeners();
   }
 
@@ -132,8 +69,6 @@ class MediaLibraryProvider with ChangeNotifier {
     _currentPage = 1;
     _hasNextPage = true;
     _mediaItems = [];
-    _shouldRefresh = true;
-    _persistState();
     notifyListeners();
     fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
@@ -142,8 +77,6 @@ class MediaLibraryProvider with ChangeNotifier {
     _currentPage = 1;
     _hasNextPage = true;
     _mediaItems = [];
-    _shouldRefresh = true;
-    _persistState();
     notifyListeners();
     fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
@@ -233,9 +166,6 @@ class MediaLibraryProvider with ChangeNotifier {
             _currentPage++;
           }
           _errorMessage = null;
-
-          // Persist the updated state
-          await _persistState();
         } else {
           developer.log(
             'API Error: Expected "data" key with a List. Body: ${response.body}',

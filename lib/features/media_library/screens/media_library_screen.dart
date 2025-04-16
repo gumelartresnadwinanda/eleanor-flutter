@@ -27,8 +27,9 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
     _scrollController.addListener(_onScroll);
     // Add initial data fetch
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<MediaLibraryProvider>().initializeData(
-        context,
+      context.read<MediaLibraryProvider>().fetchMediaItems(
+        isInitialLoad: true,
+        context: context,
         tag: widget.tag,
       );
     });
