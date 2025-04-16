@@ -8,7 +8,7 @@ class MediaItem {
   final String filePath;
   final MediaType fileType;
   final String tags;
-  final DateTime date; 
+  final DateTime date;
   final String thumbnailPath;
   final bool isProtected;
   final String thumbnailLg;
@@ -27,7 +27,7 @@ class MediaItem {
     required this.thumbnailMd,
   });
 
- String get gridThumbnail {
+  String get gridThumbnail {
     if (thumbnailMd.isNotEmpty) {
       return thumbnailMd;
     }
@@ -47,17 +47,22 @@ class MediaItem {
       final String createdAtString = json['created_at'] as String? ?? '';
       parsedDate = DateTime.parse(createdAtString);
     } catch (e) {
-      developer.log('Error parsing date string: ${json['created_at']}', name: 'MediaItem.fromJson', error: e);
+      developer.log(
+        'Error parsing date string: ${json['created_at']}',
+        name: 'MediaItem.fromJson',
+        error: e,
+      );
       parsedDate = DateTime.now();
     }
 
     final String fileTypeString = json['file_type'] as String? ?? 'photo';
-    final MediaType parsedFileType = fileTypeString.toLowerCase() == 'video'
-        ? MediaType.video
-        : MediaType.photo;
+    final MediaType parsedFileType =
+        fileTypeString.toLowerCase() == 'video'
+            ? MediaType.video
+            : MediaType.photo;
     final dynamic idValue = json['id'];
     final String parsedId = idValue?.toString() ?? '';
-    
+
     return MediaItem(
       id: parsedId,
       title: json['title'] as String? ?? '',
@@ -72,19 +77,32 @@ class MediaItem {
     );
   }
 
-  List<String> get tagList => tags
-      .split(',')
-      .map((tag) => tag.trim())
-      .where((tag) => tag.isNotEmpty)
-      .toList();
+  List<String> get tagList =>
+      tags
+          .split(',')
+          .map((tag) => tag.trim())
+          .where((tag) => tag.isNotEmpty)
+          .toList();
 
   @override
   String toString() {
     return 'MediaItem(id: $id, title: $title, fileType: $fileType, date: $date, tags: "$tags")';
   }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'file_path': filePath,
+      'file_type': fileType.toString().split('.').last,
+      'tags': tags,
+      'created_at': date.toIso8601String(),
+      'thumbnail_path': thumbnailPath,
+      'is_protected': isProtected,
+      'thumbnail_lg': thumbnailLg,
+      'thumbnail_md': thumbnailMd,
+    };
+  }
 }
 
-enum MediaType {
-  photo,
-  video,
-} 
+enum MediaType { photo, video }

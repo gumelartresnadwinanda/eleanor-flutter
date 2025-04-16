@@ -4,6 +4,7 @@ import '../models/media_item.dart';
 import '../providers/media_library_provider.dart';
 import '../widgets/video_player.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:go_router/go_router.dart';
 
 class MediaViewerScreen extends StatefulWidget {
   final String initialMediaId;
@@ -20,6 +21,9 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
   late List<MediaItem> _allItems;
   bool _showControls = false;
   bool _isZoomed = false;
+  late MediaItem _currentMedia;
+  bool _isLoading = true;
+
   @override
   void initState() {
     super.initState();
@@ -34,6 +38,19 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
     }
 
     _pageController = PageController(initialPage: _currentIndex);
+    _loadMedia();
+  }
+
+  Future<void> _loadMedia() async {
+    final mediaProvider = context.read<MediaLibraryProvider>();
+    final media = mediaProvider.mediaItems.firstWhere(
+      (item) => item.id == widget.initialMediaId,
+      orElse: () => throw Exception('Media not found'),
+    );
+    setState(() {
+      _currentMedia = media;
+      _isLoading = false;
+    });
   }
 
   void _toggleControls() {
@@ -50,6 +67,10 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     if (_allItems.isEmpty) {
       return Scaffold(
         extendBodyBehindAppBar: true,
@@ -73,6 +94,13 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
             ? _allItems[_currentIndex]
             : null;
 
+    final List<String> tagList =
+        _currentMedia.tags
+            .split(',')
+            .map((tag) => tag.trim())
+            .where((tag) => tag.isNotEmpty)
+            .toList();
+
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.black,
@@ -87,39 +115,86 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
               : null,
       body: GestureDetector(
         onTap: _toggleControls,
-        child: PageView.builder(
-          controller: _pageController,
-          itemCount: _allItems.length,
-          physics: _isZoomed ? NeverScrollableScrollPhysics() : null,
-          onPageChanged: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
-          },
-          itemBuilder: (context, index) {
-            final item = _allItems[index];
-            return InteractiveViewer(
-              panEnabled: true,
-              scaleEnabled: true,
-              minScale: 1.0,
-              maxScale: 4.0,
-              onInteractionUpdate: (details) {
-                final bool wasZoomed = _isZoomed;
-                _isZoomed = details.scale > 1.0;
-                print('Zoomed2: $details.scale');
-                print('Was zoomed: $wasZoomed');
-                if (wasZoomed != _isZoomed) {
-                  setState(() {});
-                }
+        child: Stack(
+          children: [
+            PageView.builder(
+              controller: _pageController,
+              itemCount: _allItems.length,
+              physics: _isZoomed ? const NeverScrollableScrollPhysics() : null,
+              onPageChanged: (index) {
+                setState(() {
+                  _currentIndex = index;
+                });
               },
-              child: Center(
-                child:
-                    item.fileType == MediaType.video
-                        ? _buildVideoPlayer(item)
-                        : _buildImageCachedViewer(item),
+              itemBuilder: (context, index) {
+                final item = _allItems[index];
+                return InteractiveViewer(
+                  panEnabled: true,
+                  scaleEnabled: true,
+                  minScale: 1.0,
+                  maxScale: 4.0,
+                  onInteractionUpdate: (details) {
+                    final bool wasZoomed = _isZoomed;
+                    _isZoomed = details.scale > 1.0;
+                    if (wasZoomed != _isZoomed) {
+                      setState(() {});
+                    }
+                  },
+                  child: Center(
+                    child:
+                        item.fileType == MediaType.video
+                            ? _buildVideoPlayer(item)
+                            : _buildImageCachedViewer(item),
+                  ),
+                );
+              },
+            ),
+            if (_showControls && tagList.isNotEmpty)
+              Positioned(
+                bottom: 20,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(16.0, 16.0, 16.0, 32.0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [Colors.black.withAlpha(150), Colors.transparent],
+                    ),
+                  ),
+                  child: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children:
+                        tagList.map((tag) {
+                          return GestureDetector(
+                            onTap: () {
+                              context.push('/media-library/tags/$tag');
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withAlpha(40),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Text(
+                                '#$tag',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                ),
               ),
-            );
-          },
+          ],
         ),
       ),
     );
@@ -133,48 +208,15 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
     );
   }
 
-  // ignore: unused_element
-  Widget _buildImageViewer(MediaItem item) {
-    return Image.network(
-      item.filePath,
-      fit: BoxFit.contain,
-      loadingBuilder: (context, child, loadingProgress) {
-        if (loadingProgress == null) return child;
-        return Center(
-          child: CircularProgressIndicator(
-            value:
-                loadingProgress.expectedTotalBytes != null
-                    ? loadingProgress.cumulativeBytesLoaded /
-                        loadingProgress.expectedTotalBytes!
-                    : null,
-          ),
-        );
-      },
-      errorBuilder: (context, error, stackTrace) {
-        return const Center(
-          child: Icon(Icons.broken_image, color: Colors.grey, size: 50),
-        );
-      },
-    );
-  }
-
   Widget _buildImageCachedViewer(MediaItem item) {
     return CachedNetworkImage(
       imageUrl: item.filePath,
       fit: BoxFit.contain,
-      progressIndicatorBuilder:
-          (context, url, downloadProgress) => Center(
-            child: CircularProgressIndicator(value: downloadProgress.progress),
-          ),
+      placeholder:
+          (context, url) => const Center(child: CircularProgressIndicator()),
       errorWidget:
-          (context, url, error) => const Center(
-            child: Icon(Icons.broken_image, color: Colors.grey, size: 50),
-          ),
-      fadeInDuration: const Duration(milliseconds: 300),
-      memCacheWidth: 2000,
-      memCacheHeight: 2000,
-      maxWidthDiskCache: 2000,
-      maxHeightDiskCache: 2000,
+          (context, url, error) =>
+              const Center(child: Icon(Icons.broken_image)),
     );
   }
 }

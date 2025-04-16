@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/media_item.dart';
-import 'package:intl/intl.dart';
 
 class MediaGridItem extends StatelessWidget {
   final MediaItem mediaItem;
@@ -65,6 +64,13 @@ class MediaListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const double placeholderAspectRatio = 1.0;
+    final List<String> tagList =
+        mediaItem.tags
+            .split(',')
+            .map((tag) => tag.trim())
+            .where((tag) => tag.isNotEmpty)
+            .toList();
+
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -131,26 +137,47 @@ class MediaListItem extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 16,
-                    ),
-                    child: Text(
-                      mediaItem.title,
-                      style: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-                ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 8,
-                  ),
-                  child: Text(
-                    DateFormat('yyyy-mm-dd').format(mediaItem.date),
-                    style: const TextStyle(fontSize: 14),
+                  padding: const EdgeInsets.all(8.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        mediaItem.title,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      if (tagList.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 4,
+                          children:
+                              tagList.map((tag) {
+                                return GestureDetector(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 8,
+                                      vertical: 4,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.blue.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Text(
+                                      '#$tag',
+                                      style: TextStyle(
+                                        color: Colors.blue.shade700,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              }).toList(),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],

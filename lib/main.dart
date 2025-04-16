@@ -8,15 +8,21 @@ import 'package:eleanor/features/media_library/screens/media_viewer_screen.dart'
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:eleanor/features/media_library/screens/media_library_home_screen.dart';
 import 'package:eleanor/core/widgets/main_menu_item.dart';
+import 'package:eleanor/features/auth/providers/auth_provider.dart';
+import 'package:eleanor/features/media_library/screens/media_tag_screen.dart';
+import 'package:eleanor/features/media_library/screens/tag_list_screen.dart';
+import 'package:eleanor/features/media_library/providers/tag_list_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await dotenv.load(fileName: '.env');
   runApp(
-    ChangeNotifierProvider(
-      create: (context) {
-        return MediaLibraryProvider();
-      },
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => MediaLibraryProvider()),
+        ChangeNotifierProvider(create: (context) => AuthProvider()..init()),
+        ChangeNotifierProvider(create: (context) => TagListProvider()),
+      ],
       child: const MyApp(),
     ),
   );
@@ -72,7 +78,7 @@ final _router = GoRouter(
           (context, state) => buildPageWithNoTransition(
             context: context,
             state: state,
-            child: MediaStagesScreen(),
+            child: const TagListScreen(type: 'stage'),
           ),
     ),
     GoRoute(
@@ -81,7 +87,7 @@ final _router = GoRouter(
           (context, state) => buildPageWithNoTransition(
             context: context,
             state: state,
-            child: MediaPersonsScreen(),
+            child: const TagListScreen(type: 'person'),
           ),
     ),
     GoRoute(
@@ -90,25 +96,7 @@ final _router = GoRouter(
           (context, state) => buildPageWithNoTransition(
             context: context,
             state: state,
-            child: MediaAlbumsScreen(),
-          ),
-    ),
-    GoRoute(
-      path: '/media-library/photos',
-      pageBuilder:
-          (context, state) => buildPageWithNoTransition(
-            context: context,
-            state: state,
-            child: MediaPhotoScreen(),
-          ),
-    ),
-    GoRoute(
-      path: '/media-library/videos',
-      pageBuilder:
-          (context, state) => buildPageWithNoTransition(
-            context: context,
-            state: state,
-            child: MediaVideoScreen(),
+            child: const TagListScreen(type: 'album'),
           ),
     ),
     GoRoute(
@@ -137,6 +125,26 @@ final _router = GoRouter(
           context: context,
           state: state,
           child: MediaViewerScreen(initialMediaId: id),
+        );
+      },
+    ),
+    GoRoute(
+      path: '/media-library/tags/:tag',
+      pageBuilder: (context, state) {
+        final String? tag = state.pathParameters['tag'];
+        if (tag == null) {
+          return buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: const Scaffold(
+              body: Center(child: Text('Error: Tag missing')),
+            ),
+          );
+        }
+        return buildPageWithNoTransition(
+          context: context,
+          state: state,
+          child: MediaTagScreen(tag: tag),
         );
       },
     ),
@@ -191,7 +199,7 @@ class HomeScreen extends StatelessWidget {
                 context.push('/media-library');
               },
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             MenuTile(
               imagePath: 'assets/food-journal.jpg',
               icon: Icons.edit_note,

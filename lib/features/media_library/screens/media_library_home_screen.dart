@@ -73,16 +73,6 @@ class _MediaLibraryHomeScreenState extends State<MediaLibraryHomeScreen> {
         title: 'Albums',
         onTap: () => context.push('/media-library/albums'),
       ),
-      _buildMenuItem(
-        icon: Icons.photo,
-        title: 'Photos',
-        onTap: () => context.push('/media-library/photos'),
-      ),
-      _buildMenuItem(
-        icon: Icons.videocam,
-        title: 'Videos',
-        onTap: () => context.push('/media-library/videos'),
-      ),
     ];
   }
 

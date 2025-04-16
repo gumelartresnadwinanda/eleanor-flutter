@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import '../models/media_item.dart';
 import 'dart:convert';
 import 'dart:developer' as developer;
-import 'package:http/http.dart  ' as http;
+import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:provider/provider.dart';
+import 'package:eleanor/features/auth/providers/auth_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum ViewMode { grid, list }
 
 enum FileType { all, photo, video }
 
 class MediaLibraryProvider with ChangeNotifier {
+  static const String _viewModeKey = 'media_library_view_mode';
+  static const String _fileTypeKey = 'media_library_file_type';
+  static const String _mediaItemsKey = 'media_library_items';
+  static const String _currentPageKey = 'media_library_current_page';
+  static const String _hasNextPageKey = 'media_library_has_next_page';
+  static const String _currentTagKey = 'media_library_current_tag';
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -35,16 +44,84 @@ class MediaLibraryProvider with ChangeNotifier {
   FileType _fileType = FileType.all;
   FileType get fileType => _fileType;
 
+  bool _shouldRefresh = true;
+  String? _currentTag;
+
   MediaLibraryProvider() {
-    fetchMediaItems(isInitialLoad: true);
+    _loadPersistedState();
+  }
+
+  Future<void> _loadPersistedState() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    // Load view mode
+    final viewModeIndex = prefs.getInt(_viewModeKey);
+    if (viewModeIndex != null) {
+      _viewMode = ViewMode.values[viewModeIndex];
+    }
+
+    // Load file type
+    final fileTypeIndex = prefs.getInt(_fileTypeKey);
+    if (fileTypeIndex != null) {
+      _fileType = FileType.values[fileTypeIndex];
+    }
+
+    // Load current page
+    _currentPage = prefs.getInt(_currentPageKey) ?? 1;
+
+    // Load has next page
+    _hasNextPage = prefs.getBool(_hasNextPageKey) ?? true;
+
+    // Load current tag
+    _currentTag = prefs.getString(_currentTagKey);
+
+    // Load media items
+    final mediaItemsJson = prefs.getString(_mediaItemsKey);
+    if (mediaItemsJson != null) {
+      try {
+        final List<dynamic> decoded = json.decode(mediaItemsJson);
+        _mediaItems = decoded.map((item) => MediaItem.fromJson(item)).toList();
+      } catch (e) {
+        developer.log('Error loading persisted media items: $e');
+        _mediaItems = [];
+      }
+    }
+
+    notifyListeners();
+  }
+
+  Future<void> _persistState() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    await prefs.setInt(_viewModeKey, _viewMode.index);
+    await prefs.setInt(_fileTypeKey, _fileType.index);
+    await prefs.setInt(_currentPageKey, _currentPage);
+    await prefs.setBool(_hasNextPageKey, _hasNextPage);
+    await prefs.setString(_currentTagKey, _currentTag ?? '');
+
+    if (_mediaItems.isNotEmpty) {
+      final mediaItemsJson = json.encode(
+        _mediaItems.map((item) => item.toJson()).toList(),
+      );
+      await prefs.setString(_mediaItemsKey, mediaItemsJson);
+    }
+  }
+
+  void initializeData(BuildContext context, {String? tag}) {
+    if (_shouldRefresh || tag != _currentTag) {
+      _currentTag = tag;
+      _shouldRefresh = false;
+      fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
+    }
   }
 
   void toggleViewMode() {
     _viewMode = _viewMode == ViewMode.grid ? ViewMode.list : ViewMode.grid;
+    _persistState();
     notifyListeners();
   }
 
-  void toggleFileType() {
+  void toggleFileType(BuildContext context, String? tag) {
     if (_fileType == FileType.all) {
       _fileType = FileType.photo;
     } else if (_fileType == FileType.photo) {
@@ -55,24 +132,34 @@ class MediaLibraryProvider with ChangeNotifier {
     _currentPage = 1;
     _hasNextPage = true;
     _mediaItems = [];
+    _shouldRefresh = true;
+    _persistState();
     notifyListeners();
-    fetchMediaItems(isInitialLoad: true);
+    fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
 
-  Future<void> fetchMediaItems({bool isInitialLoad = false}) async {
-    final String? baseUrl = dotenv.env['API_BASE_URL'];
+  void refreshItems(BuildContext context, String? tag) {
+    _currentPage = 1;
+    _hasNextPage = true;
+    _mediaItems = [];
+    _shouldRefresh = true;
+    _persistState();
+    notifyListeners();
+    fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
+  }
+
+  static const int pageSize = 30;
+
+  Future<void> fetchMediaItems({
+    bool isInitialLoad = false,
+    required BuildContext context,
+    String? tag,
+  }) async {
     if (_isLoading || _isFetchingMore || (!isInitialLoad && !_hasNextPage)) {
       return;
     }
-    if (isInitialLoad) {
-      _currentPage = 1;
-      _errorMessage = null;
-      _isLoading = true;
-    } else {
-      _isFetchingMore = true;
-    }
-    notifyListeners();
 
+    final String? baseUrl = dotenv.env['API_BASE_URL'];
     if (baseUrl == null) {
       _errorMessage = 'API configuration is missing';
       _mediaItems = [];
@@ -80,14 +167,30 @@ class MediaLibraryProvider with ChangeNotifier {
       notifyListeners();
       return;
     }
+
+    if (isInitialLoad) {
+      _currentPage = 1;
+      _errorMessage = null;
+      _isLoading = true;
+      _mediaItems = [];
+    } else {
+      _isFetchingMore = true;
+    }
+    notifyListeners();
+
+    String tagParam = tag != null ? '&tags=$tag' : '';
     final String apiUrl =
-        '$baseUrl/medias?page=$_currentPage&limit=100&sort_order=desc&file_type=${_fileType.name}';
+        '$baseUrl/medias?page=$_currentPage&limit=$pageSize&sort_order=desc&file_type=${_fileType.name}$tagParam';
     developer.log(
       'Fetching media items from: $apiUrl',
       name: 'MediaLibraryProvider',
     );
     try {
-      final response = await http.get(Uri.parse(apiUrl));
+      final authProvider = context.read<AuthProvider>();
+      final headers = authProvider.getAuthHeaders();
+
+      final response = await http.get(Uri.parse(apiUrl), headers: headers);
+
       if (response.statusCode == 200) {
         final Map<String, dynamic> decodedBody = json.decode(response.body);
         if (decodedBody.containsKey('data') && decodedBody['data'] is List) {
@@ -130,6 +233,9 @@ class MediaLibraryProvider with ChangeNotifier {
             _currentPage++;
           }
           _errorMessage = null;
+
+          // Persist the updated state
+          await _persistState();
         } else {
           developer.log(
             'API Error: Expected "data" key with a List. Body: ${response.body}',
@@ -139,6 +245,9 @@ class MediaLibraryProvider with ChangeNotifier {
               'Failed to load media items. Unexpected response format.';
           _mediaItems = [];
         }
+      } else if (response.statusCode == 401) {
+        _errorMessage = 'Authentication required for protected media';
+        _mediaItems = [];
       } else {
         developer.log(
           'API Error: ${response.statusCode} - ${response.body}',
@@ -155,7 +264,7 @@ class MediaLibraryProvider with ChangeNotifier {
         error: e,
       );
       _errorMessage = 'Failed to load media items. Check network connection.';
-      _mediaItems = []; // Clear items on fetch error
+      _mediaItems = [];
     } finally {
       if (isInitialLoad) _isLoading = false;
       _isFetchingMore = false;
@@ -163,7 +272,29 @@ class MediaLibraryProvider with ChangeNotifier {
     }
   }
 
-  Future<void> fetchMoreMediaItems() async {
-    await fetchMediaItems();
+  Future<void> fetchMoreMediaItems(BuildContext context) async {
+    await fetchMediaItems(context: context);
+  }
+
+  Future<String?> getMediaUrl(String mediaId, BuildContext context) async {
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final headers = authProvider.getAuthHeaders();
+
+      final response = await http.get(
+        Uri.parse('${dotenv.env['API_URL']}/media/$mediaId/url'),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        return response.body;
+      } else if (response.statusCode == 401) {
+        return null;
+      } else {
+        throw Exception('Failed to get media URL');
+      }
+    } catch (e) {
+      throw Exception('Error getting media URL: $e');
+    }
   }
 }
