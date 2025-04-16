@@ -8,6 +8,8 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 enum ViewMode { grid, list }
 
+enum FileType { all, photo, video }
+
 class MediaLibraryProvider with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -23,10 +25,15 @@ class MediaLibraryProvider with ChangeNotifier {
 
   int _currentPage = 1;
   int get currentPage => _currentPage;
+
   bool _hasNextPage = true;
   bool get hasNextPage => _hasNextPage;
+
   bool _isFetchingMore = false;
   bool get isFetchingMore => _isFetchingMore;
+
+  FileType _fileType = FileType.all;
+  FileType get fileType => _fileType;
 
   MediaLibraryProvider() {
     fetchMediaItems(isInitialLoad: true);
@@ -35,6 +42,21 @@ class MediaLibraryProvider with ChangeNotifier {
   void toggleViewMode() {
     _viewMode = _viewMode == ViewMode.grid ? ViewMode.list : ViewMode.grid;
     notifyListeners();
+  }
+
+  void toggleFileType() {
+    if (_fileType == FileType.all) {
+      _fileType = FileType.photo;
+    } else if (_fileType == FileType.photo) {
+      _fileType = FileType.video;
+    } else {
+      _fileType = FileType.all;
+    }
+    _currentPage = 1;
+    _hasNextPage = true;
+    _mediaItems = [];
+    notifyListeners();
+    fetchMediaItems(isInitialLoad: true);
   }
 
   Future<void> fetchMediaItems({bool isInitialLoad = false}) async {
@@ -59,7 +81,7 @@ class MediaLibraryProvider with ChangeNotifier {
       return;
     }
     final String apiUrl =
-        '$baseUrl/medias?page=$_currentPage&limit=100&sort_order=desc&file_type=photo';
+        '$baseUrl/medias?page=$_currentPage&limit=100&sort_order=desc&file_type=${_fileType.name}';
     developer.log(
       'Fetching media items from: $apiUrl',
       name: 'MediaLibraryProvider',

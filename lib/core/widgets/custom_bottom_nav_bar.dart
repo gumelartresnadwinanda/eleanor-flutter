@@ -10,10 +10,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
     return BottomNavigationBar(
       currentIndex: currentIndex,
       items: const [
-        BottomNavigationBarItem(
-          icon: Icon(Icons.home),
-          label: 'Home',
-        ),
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
         BottomNavigationBarItem(
           icon: Icon(Icons.photo_library),
           label: 'Media Library',
@@ -39,7 +36,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
         if (currentLocation != targetLocation) {
           context.go(targetLocation);
         }
-      }
+      },
     );
   }
 }

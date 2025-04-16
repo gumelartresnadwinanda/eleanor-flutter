@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/media_item.dart';
+import 'package:intl/intl.dart';
 
 class MediaGridItem extends StatelessWidget {
   final MediaItem mediaItem;
@@ -73,35 +74,42 @@ class MediaListItem extends StatelessWidget {
           Stack(
             alignment: Alignment.center,
             children: [
-              Image.network(
-                mediaItem.listThumbnail,
-                fit: BoxFit.fitWidth,
-                loadingBuilder: (context, child, loadingProgress) {
-                  if (loadingProgress == null) return child;
-                  return AspectRatio(
-                    aspectRatio: placeholderAspectRatio,
-                    child: Container(
-                      width: double.infinity, // Take full width
-                      color: Colors.grey[300],
-                      child: const Center(child: CircularProgressIndicator()),
-                    ),
-                  );
-                },
-                errorBuilder: (context, error, stackTrace) {
-                  return AspectRatio(
-                    aspectRatio: placeholderAspectRatio,
-                    child: Container(
-                      width: double.infinity, // Take full width
-                      color: Colors.grey[300],
-                      child: const Center(
-                        child: Icon(
-                          Icons.broken_image_outlined,
-                          color: Colors.black54,
+              ClipRRect(
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(8),
+                  topRight: Radius.circular(8),
+                ),
+                child: Image.network(
+                  mediaItem.listThumbnail,
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    return AspectRatio(
+                      aspectRatio: placeholderAspectRatio,
+                      child: Container(
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Center(child: CircularProgressIndicator()),
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return AspectRatio(
+                      aspectRatio: placeholderAspectRatio,
+                      child: Container(
+                        width: double.infinity,
+                        color: Colors.grey[300],
+                        child: const Center(
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: Colors.black54,
+                          ),
                         ),
                       ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
               if (mediaItem.fileType == MediaType.video)
                 const Center(
@@ -113,11 +121,42 @@ class MediaListItem extends StatelessWidget {
                 ),
             ],
           ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Text(mediaItem.title, style: const TextStyle(fontSize: 14)),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade300,
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(8),
+                bottomRight: Radius.circular(8),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
+                    child: Text(
+                      mediaItem.title,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  child: Text(
+                    DateFormat('yyyy-mm-dd').format(mediaItem.date),
+                    style: const TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
         ],
       ),
     );

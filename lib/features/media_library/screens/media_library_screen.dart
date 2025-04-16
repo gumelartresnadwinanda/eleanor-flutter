@@ -44,6 +44,7 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
     final mediaProvider = Provider.of<MediaLibraryProvider>(context);
     final items = mediaProvider.mediaItems;
     final viewMode = mediaProvider.viewMode;
+    final fileType = mediaProvider.fileType;
     final errorMessage = mediaProvider.errorMessage;
     final isFetchingMore = mediaProvider.isFetchingMore;
     final isLoading = mediaProvider.isLoading;
@@ -58,6 +59,18 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
             ),
             onPressed: () {
               context.read<MediaLibraryProvider>().toggleViewMode();
+            },
+          ),
+          IconButton(
+            icon: Icon(
+              fileType == FileType.all
+                  ? Icons.photo_library
+                  : fileType == FileType.photo
+                  ? Icons.photo
+                  : Icons.videocam,
+            ),
+            onPressed: () {
+              context.read<MediaLibraryProvider>().toggleFileType();
             },
           ),
         ],
