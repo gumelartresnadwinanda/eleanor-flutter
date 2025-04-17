@@ -108,42 +108,45 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
         ],
       ),
       body: RefreshIndicator(
-        onRefresh:
-            () => mediaProvider.fetchMediaItems(
-              isInitialLoad: true,
-              context: context,
-            ),
-        child: Stack(
-          children: [
-            if (isLoading)
-              const Center(child: CircularProgressIndicator())
-            else if (errorMessage != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Text(
-                    errorMessage,
-                    style: const TextStyle(color: Colors.red),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              )
-            else
-              items.isEmpty
-                  ? const Center(child: Text('No media items found.'))
-                  : NotificationListener<ScrollNotification>(
-                    onNotification: (ScrollNotification scrollInfo) {
-                      if (!isFetchingMore &&
-                          hasNextPage &&
-                          scrollInfo.metrics.pixels >=
-                              scrollInfo.metrics.maxScrollExtent - 200) {
-                        mediaProvider.fetchMediaItems(context: context);
-                      }
-                      return true;
-                    },
-                    child: SingleChildScrollView(
-                      controller: _scrollController,
-                      child: Column(
+        onRefresh: () async {
+          await context.read<MediaLibraryProvider>().refreshItems(
+            context,
+            widget.tag,
+          );
+          return;
+        },
+        child: NotificationListener<ScrollNotification>(
+          onNotification: (ScrollNotification scrollInfo) {
+            if (!isFetchingMore &&
+                hasNextPage &&
+                scrollInfo.metrics.pixels >=
+                    scrollInfo.metrics.maxScrollExtent - 200) {
+              mediaProvider.fetchMediaItems(context: context);
+            }
+            return true;
+          },
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Stack(
+              children: [
+                if (isLoading)
+                  const Center(child: CircularProgressIndicator())
+                else if (errorMessage != null)
+                  Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: Text(
+                        errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else
+                  items.isEmpty
+                      ? const Center(child: Text('No media items found.'))
+                      : Column(
                         children: [
                           viewMode == ViewMode.grid
                               ? _buildGridView(context)
@@ -155,33 +158,9 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
                             ),
                         ],
                       ),
-                    ),
-                  ),
-            // if (_showBackToTop)
-            //   Positioned(
-            //     bottom: 20,
-            //     right: 20,
-            //     child: Container(
-            //       decoration: BoxDecoration(
-            //         shape: BoxShape.circle,
-            //         boxShadow: [
-            //           BoxShadow(
-            //             color: Colors.black.withAlpha(60),
-            //             blurRadius: 8,
-            //             offset: const Offset(0, 2),
-            //           ),
-            //         ],
-            //       ),
-            //       child: FloatingActionButton(
-            //         mini: true,
-            //         onPressed: _scrollToTop,
-            //         backgroundColor: Colors.white.withAlpha(150),
-            //         elevation: 2,
-            //         child: const Icon(Icons.arrow_upward),
-            //       ),
-            //     ),
-            //   ),
-          ],
+              ],
+            ),
+          ),
         ),
       ),
       floatingActionButton: Row(

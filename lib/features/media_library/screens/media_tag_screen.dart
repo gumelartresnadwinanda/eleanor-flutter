@@ -7,6 +7,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
 import '../widgets/media_list_widgets.dart';
 import '../models/media_item.dart';
+import '../../../core/widgets/custom_bottom_nav_bar.dart';
 
 class MediaTagScreen extends StatefulWidget {
   final String tag;
@@ -193,6 +194,7 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
                 child: const Icon(Icons.arrow_upward),
               )
               : null,
+      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
     );
   }
 
@@ -266,7 +268,7 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
                 onTap: () => _navigateToViewer(context, item),
               ),
             );
-          }).toList(),
+          }),
         if (hasNextPage && !isFetchingMore)
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -310,10 +312,10 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.all(16.0),
           child: Text(
-            'Similar Places',
+            'More Like ${widget.tag}',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),

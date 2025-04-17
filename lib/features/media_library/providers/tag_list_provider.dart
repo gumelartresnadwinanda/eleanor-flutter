@@ -5,6 +5,7 @@ import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:eleanor/features/auth/providers/auth_provider.dart';
+import 'package:eleanor/features/settings/providers/settings_provider.dart';
 
 class TagItem {
   final String name;
@@ -76,8 +77,14 @@ class TagListProvider with ChangeNotifier {
       notifyListeners();
       return;
     }
+
+    final settingsProvider = context.read<SettingsProvider>();
+    final protectiveModeParam = settingsProvider.getProtectiveModeParam(
+      context,
+    );
+
     final String apiUrl =
-        '$baseUrl/tags?page=$_currentPage&limit=100&sort_order=asc&sort_by=name&check_media=true&type=$type';
+        '$baseUrl/tags?page=$_currentPage&limit=100&sort_order=asc&sort_by=name&check_media=true&type=$type$protectiveModeParam';
 
     try {
       final authProvider = context.read<AuthProvider>();
@@ -139,9 +146,12 @@ class TagListProvider with ChangeNotifier {
 
       final authProvider = context.read<AuthProvider>();
       final headers = authProvider.getAuthHeaders();
-
+      final settingsProvider = context.read<SettingsProvider>();
+      final protectiveModeParam = settingsProvider.getProtectiveModeParam(
+        context,
+      );
       final response = await http.get(
-        Uri.parse('$baseUrl/tags/recommendations/$tag'),
+        Uri.parse('$baseUrl/tags/recommendations/$tag?$protectiveModeParam'),
         headers: headers,
       );
 

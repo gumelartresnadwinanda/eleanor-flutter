@@ -12,6 +12,8 @@ import 'package:eleanor/features/auth/providers/auth_provider.dart';
 import 'package:eleanor/features/media_library/screens/media_tag_screen.dart';
 import 'package:eleanor/features/media_library/screens/tag_list_screen.dart';
 import 'package:eleanor/features/media_library/providers/tag_list_provider.dart';
+import 'package:eleanor/features/settings/providers/settings_provider.dart';
+import 'package:eleanor/features/settings/screens/settings_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,6 +24,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => MediaLibraryProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (context) => TagListProvider()),
+        ChangeNotifierProvider(create: (context) => SettingsProvider()),
       ],
       child: const MyApp(),
     ),
@@ -109,6 +112,15 @@ final _router = GoRouter(
           ),
     ),
     GoRoute(
+      path: '/settings',
+      pageBuilder:
+          (context, state) => buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: const SettingsScreen(),
+          ),
+    ),
+    GoRoute(
       path: '/media/:id',
       pageBuilder: (context, state) {
         final String? id = state.pathParameters['id'];
@@ -159,7 +171,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp.router(
       title: 'Eleanor',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyan),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
       routerConfig: _router,
@@ -167,10 +179,15 @@ class MyApp extends StatelessWidget {
         if (child == null) {
           return const SizedBox.shrink();
         }
-        return Center(
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
           child: Container(
-            constraints: const BoxConstraints(maxWidth: 600),
-            child: child,
+            color: Theme.of(context).scaffoldBackgroundColor,
+            alignment: Alignment.center,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 600),
+              child: child,
+            ),
           ),
         );
       },

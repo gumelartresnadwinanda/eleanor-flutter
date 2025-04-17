@@ -117,10 +117,21 @@ class _MediaVideoPlayerState extends State<MediaVideoPlayer> {
               child: Container(
                 padding: const EdgeInsets.all(16),
                 color: Colors.black26,
-                child: VideoProgressIndicator(
-                  _controller,
-                  allowScrubbing: true,
-                  padding: EdgeInsets.symmetric(horizontal: 16),
+                child: Container(
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: VideoProgressIndicator(
+                    _controller,
+                    allowScrubbing: true,
+                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    colors: VideoProgressColors(
+                      playedColor: Colors.white,
+                      bufferedColor: Colors.grey.withAlpha(90),
+                    ),
+                  ),
                 ),
               ),
             ),

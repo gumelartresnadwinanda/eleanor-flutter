@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:provider/provider.dart';
-import 'package:eleanor/features/auth/providers/auth_provider.dart';
-import 'package:eleanor/features/auth/screens/login_screen.dart';
 
 class CustomBottomNavigationBar extends StatelessWidget {
   final int currentIndex;
@@ -10,8 +7,6 @@ class CustomBottomNavigationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final authProvider = context.watch<AuthProvider>();
-
     return BottomNavigationBar(
       currentIndex: currentIndex,
       backgroundColor: Colors.white,
@@ -28,9 +23,9 @@ class CustomBottomNavigationBar extends StatelessWidget {
           icon: Icon(Icons.restaurant),
           label: 'Food Journal',
         ),
-        BottomNavigationBarItem(
-          icon: Icon(authProvider.isAuthenticated ? Icons.logout : Icons.login),
-          label: authProvider.isAuthenticated ? 'Logout' : 'Login',
+        const BottomNavigationBarItem(
+          icon: Icon(Icons.settings),
+          label: 'Settings',
         ),
       ],
       onTap: (index) {
@@ -45,15 +40,7 @@ class CustomBottomNavigationBar extends StatelessWidget {
           case 2:
             targetLocation = '/food-journal';
           case 3:
-            if (authProvider.isAuthenticated) {
-              authProvider.logout(context);
-              return;
-            } else {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-              return;
-            }
+            targetLocation = '/settings';
           default:
             targetLocation = '/';
         }

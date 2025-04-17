@@ -6,6 +6,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'package:eleanor/features/auth/providers/auth_provider.dart';
+import 'package:eleanor/features/settings/providers/settings_provider.dart';
 
 enum ViewMode { grid, list }
 
@@ -73,12 +74,12 @@ class MediaLibraryProvider with ChangeNotifier {
     fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
 
-  void refreshItems(BuildContext context, String? tag) {
+  Future<void> refreshItems(BuildContext context, String? tag) async {
     _currentPage = 1;
     _hasNextPage = true;
     _mediaItems = [];
     notifyListeners();
-    fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
+    await fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
 
   static const int pageSize = 30;
@@ -112,8 +113,13 @@ class MediaLibraryProvider with ChangeNotifier {
     notifyListeners();
 
     String tagParam = tag != null ? '&tags=$tag' : '';
+    final settingsProvider = context.read<SettingsProvider>();
+    final protectiveModeParam = settingsProvider.getProtectiveModeParam(
+      context,
+    );
+    print('Protective Mode Param: $protectiveModeParam');
     final String apiUrl =
-        '$baseUrl/medias?page=$_currentPage&limit=$pageSize&sort_order=desc&file_type=${_fileType.name}$tagParam';
+        '$baseUrl/medias?page=$_currentPage&limit=$pageSize&sort_order=desc&file_type=${_fileType.name}$tagParam$protectiveModeParam';
     developer.log(
       'Fetching media items from: $apiUrl',
       name: 'MediaLibraryProvider',
