@@ -107,23 +107,23 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
           ),
         ],
       ),
-      body: RefreshIndicator(
-        onRefresh: () async {
-          await context.read<MediaLibraryProvider>().refreshItems(
-            context,
-            widget.tag,
-          );
-          return;
+      body: NotificationListener<ScrollNotification>(
+        onNotification: (ScrollNotification scrollInfo) {
+          if (!isFetchingMore &&
+              hasNextPage &&
+              scrollInfo.metrics.pixels >=
+                  scrollInfo.metrics.maxScrollExtent - 200) {
+            mediaProvider.fetchMediaItems(context: context);
+          }
+          return true;
         },
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (ScrollNotification scrollInfo) {
-            if (!isFetchingMore &&
-                hasNextPage &&
-                scrollInfo.metrics.pixels >=
-                    scrollInfo.metrics.maxScrollExtent - 200) {
-              mediaProvider.fetchMediaItems(context: context);
-            }
-            return true;
+        child: RefreshIndicator(
+          onRefresh: () async {
+            await context.read<MediaLibraryProvider>().refreshItems(
+              context,
+              widget.tag,
+            );
+            return;
           },
           child: SingleChildScrollView(
             controller: _scrollController,
