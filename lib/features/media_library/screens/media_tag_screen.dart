@@ -163,12 +163,19 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
       ),
       body: NotificationListener<ScrollNotification>(
         child: RefreshIndicator(
-          onRefresh:
-              () => context.read<MediaLibraryProvider>().fetchMediaItems(
-                isInitialLoad: true,
-                context: context,
-                tag: widget.tag,
-              ),
+          onRefresh: () async {
+            final fetchMedia = context
+                .read<MediaLibraryProvider>()
+                .fetchMediaItems(
+                  isInitialLoad: true,
+                  context: context,
+                  tag: widget.tag,
+                );
+            final fetchRecommendations = context
+                .read<TagListProvider>()
+                .fetchRecommendations(widget.tag, context: context);
+            await Future.wait([fetchMedia, fetchRecommendations]);
+          },
           child: CustomScrollView(
             controller: _scrollController,
             slivers: [
