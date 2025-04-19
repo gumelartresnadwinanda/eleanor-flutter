@@ -82,7 +82,7 @@ class MediaLibraryProvider with ChangeNotifier {
     await fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
 
-  static const int pageSize = 30;
+  static const int pageSize = 50;
 
   Future<void> fetchMediaItems({
     bool isInitialLoad = false,
