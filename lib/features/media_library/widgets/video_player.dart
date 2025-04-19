@@ -31,6 +31,7 @@ class _MediaVideoPlayerState extends State<MediaVideoPlayer> {
     _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
     try {
       await _controller.initialize();
+      await _controller.play();
       setState(() {
         _isInitialized = true;
         _errorMessage = '';
@@ -116,21 +117,13 @@ class _MediaVideoPlayerState extends State<MediaVideoPlayer> {
               right: 0,
               child: Container(
                 padding: const EdgeInsets.all(16),
-                color: Colors.black26,
-                child: Container(
-                  height: 13,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: VideoProgressIndicator(
-                    _controller,
-                    allowScrubbing: true,
-                    padding: EdgeInsets.symmetric(horizontal: 16),
-                    colors: VideoProgressColors(
-                      playedColor: Colors.white,
-                      bufferedColor: Colors.grey.withAlpha(90),
-                    ),
+                child: VideoProgressIndicator(
+                  _controller,
+                  allowScrubbing: true,
+                  padding: EdgeInsets.symmetric(horizontal: 16),
+                  colors: VideoProgressColors(
+                    playedColor: Colors.white,
+                    bufferedColor: Colors.grey.withAlpha(90),
                   ),
                 ),
               ),
