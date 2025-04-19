@@ -151,6 +151,7 @@ class _TagListScreenState extends State<TagListScreen> {
                   ? const Center(child: Text('No tags found.'))
                   : SingleChildScrollView(
                     controller: _scrollController,
+                    physics: const AlwaysScrollableScrollPhysics(),
                     child: Column(
                       children: [
                         GridView.builder(
