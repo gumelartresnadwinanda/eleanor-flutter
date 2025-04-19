@@ -21,7 +21,6 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
   late List<MediaItem> _allItems;
   bool _showControls = false;
   bool _isZoomed = false;
-  late MediaItem _currentMedia;
   bool _isLoading = true;
 
   @override
@@ -42,13 +41,7 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
   }
 
   Future<void> _loadMedia() async {
-    final mediaProvider = context.read<MediaLibraryProvider>();
-    final media = mediaProvider.mediaItems.firstWhere(
-      (item) => item.id == widget.initialMediaId,
-      orElse: () => throw Exception('Media not found'),
-    );
     setState(() {
-      _currentMedia = media;
       _isLoading = false;
     });
   }
@@ -95,11 +88,13 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
             : null;
 
     final List<String> tagList =
-        _currentMedia.tags
-            .split(',')
-            .map((tag) => tag.trim())
-            .where((tag) => tag.isNotEmpty)
-            .toList();
+        currentItem != null
+            ? currentItem.tags
+                .split(',')
+                .map((tag) => tag.trim())
+                .where((tag) => tag.isNotEmpty)
+                .toList()
+            : [];
 
     return Scaffold(
       extendBodyBehindAppBar: true,
