@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import '../widgets/media_list_widgets.dart';
 import '../models/media_item.dart';
 import '../../../core/widgets/custom_bottom_nav_bar.dart';
+import '../widgets/media_grid_widget.dart';
 
 class MediaTagScreen extends StatefulWidget {
   final String tag;
@@ -257,7 +258,7 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
             itemCount: items.length,
             itemBuilder: (context, index) {
               final item = items[index];
-              return MediaGridItem(
+              return CachedMediaGridItem(
                 mediaItem: item,
                 onTap: () => _navigateToViewer(context, item),
               );

@@ -7,6 +7,7 @@ import '../providers/media_library_provider.dart';
 import '../widgets/media_list_widgets.dart';
 import '../../../core/widgets/custom_bottom_nav_bar.dart';
 import '../models/media_item.dart';
+import '../widgets/media_grid_widget.dart';
 
 class MediaLibraryScreen extends StatefulWidget {
   final String? tag;
@@ -196,7 +197,7 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        return MediaGridItem(
+        return CachedMediaGridItem(
           mediaItem: item,
           onTap: () => _navigateToViewer(context, item),
         );
