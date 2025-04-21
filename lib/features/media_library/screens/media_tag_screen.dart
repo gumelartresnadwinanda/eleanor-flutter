@@ -162,34 +162,23 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
           ),
         ],
       ),
-      body: NotificationListener<ScrollNotification>(
-        child: RefreshIndicator(
-          onRefresh: () async {
-            final fetchMedia = context
-                .read<MediaLibraryProvider>()
-                .fetchMediaItems(
-                  isInitialLoad: true,
-                  context: context,
-                  tag: widget.tag,
-                );
-            final fetchRecommendations = context
-                .read<TagListProvider>()
-                .fetchRecommendations(widget.tag, context: context);
-            await Future.wait([fetchMedia, fetchRecommendations]);
-          },
-          child: CustomScrollView(
-            controller: _scrollController,
-            slivers: [
-              SliverToBoxAdapter(child: _buildContent(context)),
-              if (context.select((MediaLibraryProvider p) => p.isFetchingMore))
-                const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Center(child: CircularProgressIndicator()),
-                  ),
-                ),
-            ],
-          ),
+      body: RefreshIndicator(
+        onRefresh: () async {
+          final fetchMedia = context
+              .read<MediaLibraryProvider>()
+              .fetchMediaItems(
+                isInitialLoad: true,
+                context: context,
+                tag: widget.tag,
+              );
+          final fetchRecommendations = context
+              .read<TagListProvider>()
+              .fetchRecommendations(widget.tag, context: context);
+          await Future.wait([fetchMedia, fetchRecommendations]);
+        },
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [_buildContent(context)],
         ),
       ),
       floatingActionButton:
@@ -221,81 +210,89 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
     );
 
     if (isLoading && items.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const SliverFillRemaining(
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
 
     if (errorMessage != null && items.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            errorMessage,
-            style: const TextStyle(color: Colors.red),
-            textAlign: TextAlign.center,
+      return SliverFillRemaining(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Text(
+              errorMessage,
+              style: const TextStyle(color: Colors.red),
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
       );
     }
 
     if (items.isEmpty) {
-      return const Center(child: Text('No media items found.'));
+      return const SliverFillRemaining(
+        child: Center(child: Text('No media items found.')),
+      );
     }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
+    return SliverMainAxisGroup(
+      slivers: [
         if (viewMode == ViewMode.grid)
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(0.5),
+          SliverGrid(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
               crossAxisSpacing: 0.5,
               mainAxisSpacing: 0.5,
               childAspectRatio: 4 / 5,
             ),
-            itemCount: items.length,
-            itemBuilder: (context, index) {
+            delegate: SliverChildBuilderDelegate((context, index) {
               final item = items[index];
               return CachedMediaGridItem(
                 mediaItem: item,
                 onTap: () => _navigateToViewer(context, item),
               );
-            },
+            }, childCount: items.length),
           )
         else
-          ...items.map((item) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 4.0,
-                horizontal: 8.0,
-              ),
-              child: MediaListItem(
-                mediaItem: item,
-                onTap: () => _navigateToViewer(context, item),
-              ),
-            );
-          }),
+          SliverList(
+            delegate: SliverChildBuilderDelegate((context, index) {
+              final item = items[index];
+              return Padding(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 4.0,
+                  horizontal: 8.0,
+                ),
+                child: MediaListItem(
+                  mediaItem: item,
+                  onTap: () => _navigateToViewer(context, item),
+                ),
+              );
+            }, childCount: items.length),
+          ),
         if (hasNextPage && !isFetchingMore)
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: ElevatedButton(
-              onPressed: () {
-                context.read<MediaLibraryProvider>().fetchMediaItems(
-                  context: context,
-                  tag: widget.tag,
-                );
-              },
-              child: const Text('Load More'),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  context.read<MediaLibraryProvider>().fetchMediaItems(
+                    context: context,
+                    tag: widget.tag,
+                  );
+                },
+                child: const Text('Load More'),
+              ),
             ),
           ),
         if (isFetchingMore)
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Center(child: CircularProgressIndicator()),
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
           ),
-        _buildRecommendations(context),
+        SliverToBoxAdapter(child: _buildRecommendations(context)),
       ],
     );
   }

@@ -26,7 +26,6 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    // Add initial data fetch
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<MediaLibraryProvider>().fetchMediaItems(
         isInitialLoad: true,
@@ -50,6 +49,14 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
       setState(() => _showBackToTop = true);
     } else {
       setState(() => _showBackToTop = false);
+    }
+
+    final mediaProvider = context.read<MediaLibraryProvider>();
+    if (!mediaProvider.isFetchingMore &&
+        mediaProvider.hasNextPage &&
+        _scrollController.position.pixels >=
+            _scrollController.position.maxScrollExtent - 200) {
+      mediaProvider.fetchMediaItems(context: context);
     }
   }
 
@@ -75,10 +82,7 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
     final viewMode = mediaProvider.viewMode;
     final fileType = mediaProvider.fileType;
     final errorMessage = mediaProvider.errorMessage;
-    final isFetchingMore = mediaProvider.isFetchingMore;
     final isLoading = mediaProvider.isLoading;
-    final hasNextPage = mediaProvider.hasNextPage;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Media Library'),
@@ -87,9 +91,7 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
             icon: Icon(
               viewMode == ViewMode.grid ? Icons.list : Icons.grid_view,
             ),
-            onPressed: () {
-              toggleViewMode();
-            },
+            onPressed: toggleViewMode,
           ),
           IconButton(
             icon: Icon(
@@ -108,119 +110,95 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
           ),
         ],
       ),
-      body: NotificationListener<ScrollNotification>(
-        onNotification: (ScrollNotification scrollInfo) {
-          if (!isFetchingMore &&
-              hasNextPage &&
-              scrollInfo.metrics.pixels >=
-                  scrollInfo.metrics.maxScrollExtent - 200) {
-            mediaProvider.fetchMediaItems(context: context);
-          }
-          return true;
+      body: RefreshIndicator(
+        onRefresh: () async {
+          await context.read<MediaLibraryProvider>().refreshItems(
+            context,
+            widget.tag,
+          );
         },
-        child: RefreshIndicator(
-          onRefresh: () async {
-            await context.read<MediaLibraryProvider>().refreshItems(
-              context,
-              widget.tag,
-            );
-            return;
-          },
-          child: SingleChildScrollView(
-            controller: _scrollController,
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Stack(
-              children: [
-                if (isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else if (errorMessage != null)
-                  Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Text(
-                        errorMessage,
-                        style: const TextStyle(color: Colors.red),
-                        textAlign: TextAlign.center,
-                      ),
+        child: CustomScrollView(
+          controller: _scrollController,
+          slivers: [
+            if (isLoading)
+              const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              )
+            else if (errorMessage != null)
+              SliverFillRemaining(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Text(
+                      errorMessage,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
                     ),
-                  )
-                else
-                  items.isEmpty
-                      ? const Center(child: Text('No media items found.'))
-                      : Column(
-                        children: [
-                          viewMode == ViewMode.grid
-                              ? _buildGridView(context)
-                              : _buildListView(context),
-                          if (isFetchingMore)
-                            const Padding(
-                              padding: EdgeInsets.all(16.0),
-                              child: Center(child: CircularProgressIndicator()),
-                            ),
-                        ],
-                      ),
-              ],
-            ),
-          ),
+                  ),
+                ),
+              )
+            else if (items.isEmpty)
+              const SliverFillRemaining(
+                child: Center(child: Text('No media items found.')),
+              )
+            else if (viewMode == ViewMode.grid)
+              _buildGridView(context, items)
+            else
+              _buildListView(context, items),
+            if (mediaProvider.isFetchingMore)
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.all(16.0),
+                  child: Center(child: CircularProgressIndicator()),
+                ),
+              ),
+          ],
         ),
       ),
-      floatingActionButton: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(width: 8),
-          if (_showBackToTop)
-            FloatingActionButton(
-              mini: true,
-              onPressed: _scrollToTop,
-              backgroundColor: Colors.white.withAlpha(150),
-              elevation: 2,
-              child: const Icon(Icons.arrow_upward),
-            ),
-        ],
-      ),
+      floatingActionButton:
+          _showBackToTop
+              ? FloatingActionButton(
+                mini: true,
+                onPressed: _scrollToTop,
+                backgroundColor: Colors.white.withAlpha(150),
+                elevation: 2,
+                child: const Icon(Icons.arrow_upward),
+              )
+              : null,
       bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
     );
   }
 
-  Widget _buildGridView(BuildContext context) {
-    final items = context.select((MediaLibraryProvider p) => p.mediaItems);
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(0.5),
+  Widget _buildGridView(BuildContext context, List<MediaItem> items) {
+    return SliverGrid(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final item = items[index];
+        return CachedMediaGridItem(
+          mediaItem: item,
+          onTap: () => _navigateToViewer(context, item),
+        );
+      }, childCount: items.length),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
         crossAxisSpacing: 0.5,
         mainAxisSpacing: 0.5,
         childAspectRatio: 4 / 5,
       ),
-      itemCount: items.length,
-      itemBuilder: (context, index) {
-        final item = items[index];
-        return CachedMediaGridItem(
-          mediaItem: item,
-          onTap: () => _navigateToViewer(context, item),
-        );
-      },
     );
   }
 
-  Widget _buildListView(BuildContext context) {
-    final items = context.select((MediaLibraryProvider p) => p.mediaItems);
-    return Column(
-      children:
-          items.map((item) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 4.0,
-                horizontal: 8.0,
-              ),
-              child: MediaListItem(
-                mediaItem: item,
-                onTap: () => _navigateToViewer(context, item),
-              ),
-            );
-          }).toList(),
+  Widget _buildListView(BuildContext context, List<MediaItem> items) {
+    return SliverList(
+      delegate: SliverChildBuilderDelegate((context, index) {
+        final item = items[index];
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
+          child: MediaListItem(
+            mediaItem: item,
+            onTap: () => _navigateToViewer(context, item),
+          ),
+        );
+      }, childCount: items.length),
     );
   }
 
