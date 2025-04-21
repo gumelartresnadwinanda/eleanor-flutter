@@ -1,3 +1,11 @@
+import 'package:eleanor/features/groceries/providers/grocery_list_provider.dart';
+import 'package:eleanor/features/groceries/providers/ingredients_provider.dart';
+import 'package:eleanor/features/groceries/providers/meal_plan_provider.dart';
+import 'package:eleanor/features/groceries/providers/recipes_provider.dart';
+import 'package:eleanor/features/groceries/screens/groceries_screen.dart';
+import 'package:eleanor/features/groceries/screens/ingredients_screen.dart';
+import 'package:eleanor/features/groceries/screens/meal_plans_screen.dart';
+import 'package:eleanor/features/groceries/screens/recipes_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -25,6 +33,10 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (context) => TagListProvider()),
         ChangeNotifierProvider(create: (context) => SettingsProvider()),
+        ChangeNotifierProvider(create: (context) => MealPlanProvider()),
+        ChangeNotifierProvider(create: (context) => IngredientsProvider()),
+        ChangeNotifierProvider(create: (context) => RecipesProvider()),
+        ChangeNotifierProvider(create: (context) => GroceryListProvider()),
       ],
       child: const MyApp(),
     ),
@@ -120,6 +132,7 @@ final _router = GoRouter(
             child: const SettingsScreen(),
           ),
     ),
+
     GoRoute(
       path: '/media/:id',
       pageBuilder: (context, state) {
@@ -159,6 +172,43 @@ final _router = GoRouter(
           child: MediaTagScreen(tag: tag),
         );
       },
+    ),
+
+    GoRoute(
+      path: '/groceries',
+      pageBuilder:
+          (context, state) => buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: GroceriesScreen(),
+          ),
+    ),
+    GoRoute(
+      path: '/groceries/ingredients',
+      pageBuilder:
+          (context, state) => buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: GroceriesIngredientsScreen(),
+          ),
+    ),
+    GoRoute(
+      path: '/groceries/recipes',
+      pageBuilder:
+          (context, state) => buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: GroceriesRecipesScreen(),
+          ),
+    ),
+    GoRoute(
+      path: '/groceries/meal-plans',
+      pageBuilder:
+          (context, state) => buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: GroceriesMealPlansScreen(),
+          ),
     ),
   ],
 );
@@ -226,6 +276,16 @@ class HomeScreen extends StatelessWidget {
                 context.push('/food-journal');
               },
             ),
+            const SizedBox(height: 20),
+            MenuTile(
+              imagePath: 'assets/groceries.jpg',
+              icon: Icons.shopping_cart,
+              title: 'Groceries',
+              description: 'Keep Track of your groceries',
+              onTap: () {
+                context.push('/groceries');
+              },
+            ),
           ],
         ),
       ),
@@ -243,71 +303,6 @@ class FoodJournalScreen extends StatelessWidget {
       appBar: AppBar(title: const Text('Food Journal')),
       body: const Center(child: Text('Food Journal Coming Soon')),
       bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 2),
-    );
-  }
-}
-
-class MediaStagesScreen extends StatelessWidget {
-  MediaStagesScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Media Stages')),
-      body: const Center(child: Text('Media Stages Coming Soon')),
-      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
-    );
-  }
-}
-
-class MediaPersonsScreen extends StatelessWidget {
-  MediaPersonsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Media Persons')),
-      body: const Center(child: Text('Media Persons Coming Soon')),
-      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
-    );
-  }
-}
-
-class MediaAlbumsScreen extends StatelessWidget {
-  MediaAlbumsScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Media Album Journal')),
-      body: const Center(child: Text('Media Album Coming Soon')),
-      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
-    );
-  }
-}
-
-class MediaPhotoScreen extends StatelessWidget {
-  MediaPhotoScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Media Photo')),
-      body: const Center(child: Text('Media Photo Coming Soon')),
-      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
-    );
-  }
-}
-
-class MediaVideoScreen extends StatelessWidget {
-  MediaVideoScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Media Video')),
-      body: const Center(child: Text('Media Video Coming Soon')),
-      bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 1),
     );
   }
 }

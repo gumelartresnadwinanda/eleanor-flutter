@@ -38,3 +38,4 @@ flutter:
     - .env
     - assets/food-journal.jpg
     - assets/media-library.jpg
+    - assets/groceries.jpg
