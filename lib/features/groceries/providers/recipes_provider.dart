@@ -13,9 +13,13 @@ class RecipesProvider with ChangeNotifier {
   Recipe? _selectedRecipe;
   Recipe? get selectedRecipe => _selectedRecipe;
 
+  bool _isDetailLoading = false;
+  bool get isDetailLoading => _isDetailLoading;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
+  String? _detailError;
+  String? get detailError => _detailError;
   String? _error;
   String? get error => _error;
 
@@ -49,6 +53,37 @@ class RecipesProvider with ChangeNotifier {
       _recipes = [];
     } finally {
       _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<Recipe?> fetchDetailRecipe(int id) async {
+    _isDetailLoading = true;
+    _detailError = '';
+    notifyListeners();
+
+    try {
+      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
+      if (baseUrl == null) {
+        throw Exception('API_BASE_URL not found in environment variables');
+      }
+
+      final response = await http.get(Uri.parse('$baseUrl/api/recipes/$id'));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        _selectedRecipe = Recipe.fromJson(data as Map<String, dynamic>);
+        _detailError = null;
+        return _selectedRecipe;
+      } else {
+        throw Exception('Failed to load recipe details');
+      }
+    } catch (e) {
+      _detailError = e.toString();
+      _selectedRecipe = null;
+      return null;
+    } finally {
+      _isDetailLoading = false;
       notifyListeners();
     }
   }

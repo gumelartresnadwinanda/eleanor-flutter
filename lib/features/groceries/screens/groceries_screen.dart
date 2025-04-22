@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:eleanor/core/widgets/custom_bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
 import '../widgets/grocery_list_card.dart';
-import 'dart:developer' as developer;
 
 class GroceriesScreen extends StatefulWidget {
   const GroceriesScreen({super.key});
@@ -30,7 +29,6 @@ class _GroceriesScreenState extends State<GroceriesScreen> {
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<GroceryListProvider>(context);
-    developer.log(provider.groceryList.toString(), name: 'Grocery List');
     return Scaffold(
       appBar: AppBar(
         title: const Text('Groceries'),

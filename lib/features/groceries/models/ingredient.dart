@@ -55,6 +55,11 @@ class Ingredient {
   @override
   int get hashCode => Object.hash(name, quantity, unit, imageUrl);
 
+  @override
+  String toString() {
+    return 'Ingredient(id: $id, name: $name, unit:$unit, quantity:$quantity)';
+  }
+
   Ingredient copyWith({
     int? id,
     String? name,
