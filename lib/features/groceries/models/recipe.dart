@@ -11,7 +11,7 @@ class Recipe {
 
   factory Recipe.fromJson(Map<String, dynamic> json) {
     return Recipe(
-      name: json['recipe_name'] as String,
+      name: json['name'] as String,
       imageUrl: json['image_url'] as String?,
       ingredients:
           (json['ingredients'] as List<dynamic>)
@@ -22,7 +22,7 @@ class Recipe {
 
   Map<String, dynamic> toJson() {
     return {
-      'recipe_name': name,
+      'name': name,
       'image_url': imageUrl,
       'ingredients': ingredients.map((e) => e.toJson()).toList(),
     };

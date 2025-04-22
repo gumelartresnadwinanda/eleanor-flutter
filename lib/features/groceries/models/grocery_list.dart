@@ -20,7 +20,7 @@ class GroceryList {
         if (aggregatedIngredients.containsKey(key)) {
           final existing = aggregatedIngredients[key]!;
           aggregatedIngredients[key] = existing.copyWith(
-            quantity: existing.quantity + ingredient.quantity,
+            quantity: (existing.quantity ?? 0) + (ingredient.quantity ?? 0),
           );
         } else {
           aggregatedIngredients[key] = ingredient;
@@ -72,6 +72,6 @@ class GroceryList {
   double getTotalQuantityForIngredient(String name, String unit) {
     return ingredients
         .where((i) => i.name == name && i.unit == unit)
-        .fold(0.0, (sum, ingredient) => sum + ingredient.quantity);
+        .fold(0.0, (sum, ingredient) => sum + (ingredient.quantity ?? 0));
   }
 }

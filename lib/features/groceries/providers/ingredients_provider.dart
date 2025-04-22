@@ -7,7 +7,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class IngredientsProvider with ChangeNotifier {
   List<Ingredient> _ingredients = [];
-  List<Ingredient> get ingredient => List.unmodifiable(_ingredients);
+  List<Ingredient> get ingredients => List.unmodifiable(_ingredients);
 
   Ingredient? _selectedIngredient;
   Ingredient? get selectedIngredient => _selectedIngredient;
@@ -18,30 +18,34 @@ class IngredientsProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  String get _baseUrl {
+    final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
+    if (baseUrl == null) {
+      throw Exception('API_BASE_URL not found in environment variables');
+    }
+    return baseUrl;
+  }
+
   Future<void> fetchIngredients() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception('API_BASE_URL not found in environment variables');
-      }
-
-      final response = await http.get(Uri.parse('$baseUrl/api/ingredients'));
+      final response = await http.get(Uri.parse('$_baseUrl/api/ingredients'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         _ingredients =
             data
                 .map(
-                  (json) => Ingredient.fromJson(json as Map<String, dynamic>),
+                  (json) =>
+                      Ingredient.fromJsonList(json as Map<String, dynamic>),
                 )
                 .toList();
         _error = null;
       } else {
-        throw Exception('Failed to load meal plans');
+        throw Exception('Failed to load ingredients');
       }
     } catch (e) {
       _error = e.toString();
@@ -50,5 +54,60 @@ class IngredientsProvider with ChangeNotifier {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  Future<void> createIngredient(Ingredient ingredient) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/ingredients'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(ingredient.toJson()),
+      );
+
+      if (response.statusCode == 201) {
+        await fetchIngredients();
+      } else {
+        throw Exception('Failed to create ingredient');
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateIngredient(Ingredient ingredient) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/api/ingredients/${ingredient.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(ingredient.toJson()),
+      );
+
+      if (response.statusCode == 200) {
+        await fetchIngredients();
+      } else {
+        throw Exception('Failed to update ingredient');
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void selectIngredient(Ingredient? ingredient) {
+    _selectedIngredient = ingredient;
+    notifyListeners();
   }
 }

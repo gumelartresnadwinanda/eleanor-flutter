@@ -84,7 +84,7 @@ class _GroceriesScreenState extends State<GroceriesScreen> {
         ],
       ),
       body: SingleChildScrollView(
-        child: Column(children: [const GroceryListCard(), _buildGridView()]),
+        child: Column(children: [_buildGridView(), const GroceryListCard()]),
       ),
       bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 3),
     );

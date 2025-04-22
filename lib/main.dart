@@ -230,7 +230,9 @@ class MyApp extends StatelessWidget {
           return const SizedBox.shrink();
         }
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          data: MediaQuery.of(
+            context,
+          ).copyWith(textScaler: TextScaler.linear(1.0)),
           child: Container(
             color: Theme.of(context).scaffoldBackgroundColor,
             alignment: Alignment.center,
@@ -253,40 +255,42 @@ class HomeScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            MenuTile(
-              imagePath: 'assets/media-library.jpg',
-              icon: Icons.photo_library,
-              title: 'Media Library',
-              description: 'Browse and manage your photos',
-              onTap: () {
-                context.push('/media-library');
-              },
-            ),
-            const SizedBox(height: 20),
-            MenuTile(
-              imagePath: 'assets/food-journal.jpg',
-              icon: Icons.edit_note,
-              title: 'Food Journal',
-              description: 'Record your meals and track nutrition',
-              onTap: () {
-                context.push('/food-journal');
-              },
-            ),
-            const SizedBox(height: 20),
-            MenuTile(
-              imagePath: 'assets/groceries.jpg',
-              icon: Icons.shopping_cart,
-              title: 'Groceries',
-              description: 'Keep Track of your groceries',
-              onTap: () {
-                context.push('/groceries');
-              },
-            ),
-          ],
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              MenuTile(
+                imagePath: 'assets/media-library.jpg',
+                icon: Icons.photo_library,
+                title: 'Media Library',
+                description: 'Browse and manage your photos',
+                onTap: () {
+                  context.push('/media-library');
+                },
+              ),
+              const SizedBox(height: 20),
+              MenuTile(
+                imagePath: 'assets/food-journal.jpg',
+                icon: Icons.edit_note,
+                title: 'Food Journal',
+                description: 'Record your meals and track nutrition',
+                onTap: () {
+                  context.push('/food-journal');
+                },
+              ),
+              const SizedBox(height: 20),
+              MenuTile(
+                imagePath: 'assets/groceries.jpg',
+                icon: Icons.shopping_cart,
+                title: 'Groceries',
+                description: 'Keep Track of your groceries',
+                onTap: () {
+                  context.push('/groceries');
+                },
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 0),

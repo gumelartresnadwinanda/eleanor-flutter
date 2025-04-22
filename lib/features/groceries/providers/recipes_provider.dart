@@ -1,4 +1,5 @@
 import 'package:eleanor/features/groceries/models/recipe.dart';
+import 'package:eleanor/features/groceries/models/recipe_list.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -6,8 +7,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class RecipesProvider with ChangeNotifier {
-  List<Recipe> _recipes = [];
-  List<Recipe> get recipes => List.unmodifiable(_recipes);
+  List<RecipeList> _recipes = [];
+  List<RecipeList> get recipes => List.unmodifiable(_recipes);
 
   Recipe? _selectedRecipe;
   Recipe? get selectedRecipe => _selectedRecipe;
@@ -35,7 +36,9 @@ class RecipesProvider with ChangeNotifier {
         final List<dynamic> data = json.decode(response.body);
         _recipes =
             data
-                .map((json) => Recipe.fromJson(json as Map<String, dynamic>))
+                .map(
+                  (json) => RecipeList.fromJson(json as Map<String, dynamic>),
+                )
                 .toList();
         _error = null;
       } else {
