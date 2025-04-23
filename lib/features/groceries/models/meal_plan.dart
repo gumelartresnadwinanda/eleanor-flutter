@@ -52,36 +52,36 @@ class MealPlanMeal {
 @immutable
 class MealPlanExtra {
   final int id;
-  final int mealPlanId;
   final String name;
   final double quantity;
   final String unit;
+  final String? imageUrl;
 
   const MealPlanExtra({
     required this.id,
-    required this.mealPlanId,
     required this.name,
     required this.quantity,
     required this.unit,
+    this.imageUrl,
   });
 
   factory MealPlanExtra.fromJson(Map<String, dynamic> json) {
     return MealPlanExtra(
       id: json['id'] as int,
-      mealPlanId: json['meal_plan_id'] as int,
       name: json['name'] as String,
       quantity: (json['quantity'] as num).toDouble(),
       unit: json['unit'] as String,
+      imageUrl: json['image_url'] as String,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'meal_plan_id': mealPlanId,
       'name': name,
       'quantity': quantity,
       'unit': unit,
+      'image_url': imageUrl,
     };
   }
 
@@ -90,28 +90,28 @@ class MealPlanExtra {
     if (identical(this, other)) return true;
     return other is MealPlanExtra &&
         other.id == id &&
-        other.mealPlanId == mealPlanId &&
         other.name == name &&
         other.quantity == quantity &&
-        other.unit == unit;
+        other.unit == unit &&
+        other.imageUrl == imageUrl;
   }
 
   @override
-  int get hashCode => Object.hash(id, mealPlanId, name, quantity, unit);
+  int get hashCode => Object.hash(id, name, quantity, unit, imageUrl);
 
   MealPlanExtra copyWith({
     int? id,
-    int? mealPlanId,
     String? name,
     double? quantity,
     String? unit,
+    String? imageUrl,
   }) {
     return MealPlanExtra(
       id: id ?? this.id,
-      mealPlanId: mealPlanId ?? this.mealPlanId,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
+      imageUrl: imageUrl ?? this.imageUrl,
     );
   }
 }

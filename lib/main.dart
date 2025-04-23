@@ -4,6 +4,7 @@ import 'package:eleanor/features/groceries/providers/meal_plan_provider.dart';
 import 'package:eleanor/features/groceries/providers/recipes_provider.dart';
 import 'package:eleanor/features/groceries/screens/groceries_screen.dart';
 import 'package:eleanor/features/groceries/screens/ingredients_screen.dart';
+import 'package:eleanor/features/groceries/screens/meal_plan_detail_screen.dart';
 import 'package:eleanor/features/groceries/screens/meal_plans_screen.dart';
 import 'package:eleanor/features/groceries/screens/recipes_screen.dart';
 import 'package:flutter/material.dart';
@@ -209,6 +210,17 @@ final _router = GoRouter(
             state: state,
             child: GroceriesMealPlansScreen(),
           ),
+    ),
+    GoRoute(
+      path: '/groceries/meal-plans/:id',
+      pageBuilder: (context, state) {
+        final int id = int.parse(state.pathParameters['id']!);
+        return buildPageWithNoTransition(
+          context: context,
+          state: state,
+          child: MealPlanDetailScreen(id: id),
+        );
+      },
     ),
   ],
 );

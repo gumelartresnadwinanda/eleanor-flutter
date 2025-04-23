@@ -1,5 +1,7 @@
+import 'package:eleanor/features/groceries/providers/grocery_list_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:eleanor/core/widgets/custom_bottom_nav_bar.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../providers/meal_plan_provider.dart';
 import '../models/meal_plan.dart';
@@ -28,18 +30,11 @@ class _GroceriesMealPlansScreenState extends State<GroceriesMealPlansScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final groceryProvider = Provider.of<GroceryListProvider>(context);
+    final activeMealPlanId = groceryProvider.activeMealPlanId;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Meal Plans'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              // TODO: Implement create meal plan
-            },
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Meal Plans')),
       body: Consumer<MealPlanProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
@@ -73,7 +68,8 @@ class _GroceriesMealPlansScreenState extends State<GroceriesMealPlansScreen> {
             padding: const EdgeInsets.all(8),
             itemBuilder: (context, index) {
               final mealPlan = provider.mealPlans[index];
-              return _buildMealPlanCard(mealPlan);
+              final isActive = activeMealPlanId == mealPlan.id;
+              return _buildMealPlanCard(mealPlan, isActive);
             },
           );
         },
@@ -82,15 +78,15 @@ class _GroceriesMealPlansScreenState extends State<GroceriesMealPlansScreen> {
     );
   }
 
-  Widget _buildMealPlanCard(MealPlan mealPlan) {
+  Widget _buildMealPlanCard(MealPlan mealPlan, bool isActive) {
     return Card(
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: ListTile(
         onTap: () {
-          // TODO: Navigate to meal plan details
+          context.push("/groceries/meal-plans/${mealPlan.id}");
         },
         title: Text(
-          mealPlan.title,
+          "${isActive ? '(Active) ' : ''}${mealPlan.title}",
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         subtitle: Text(
@@ -99,11 +95,7 @@ class _GroceriesMealPlansScreenState extends State<GroceriesMealPlansScreen> {
         ),
         trailing: Row(
           mainAxisSize: MainAxisSize.min,
-          children: [
-            if (mealPlan.archived)
-              const Icon(Icons.archive, color: Colors.grey),
-            const Icon(Icons.chevron_right),
-          ],
+          children: [const Icon(Icons.chevron_right)],
         ),
       ),
     );

@@ -56,12 +56,12 @@ class MealPlanProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['API_BASE_URL'];
+      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
       if (baseUrl == null) {
         throw Exception('API_BASE_URL not found in environment variables');
       }
 
-      final response = await http.get(Uri.parse('$baseUrl/meal-plans/$id'));
+      final response = await http.get(Uri.parse('$baseUrl/api/meal-plans/$id'));
 
       if (response.statusCode == 200) {
         final json = jsonDecode(response.body);

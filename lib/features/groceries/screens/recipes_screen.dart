@@ -1,4 +1,5 @@
 import 'package:eleanor/core/services/permission_service.dart';
+import 'package:eleanor/core/services/upload_service.dart';
 import 'package:eleanor/core/widgets/image_preview.dart';
 import 'package:eleanor/features/groceries/models/ingredient.dart';
 import 'package:eleanor/features/groceries/models/ingredients_input.dart';
@@ -98,6 +99,7 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
     String? imagePath;
     String? imageUrl;
     List<IngredientInput>? ingredientInputs = [];
+    final uploadService = UploadService();
 
     if (recipe != null) {
       selectedRecipe = await provider.fetchDetailRecipe(recipe.id);
@@ -299,7 +301,7 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                       backgroundColor: Colors.lightBlue[200],
                                       foregroundColor: Colors.white,
                                     ),
-                                    onPressed: () {
+                                    onPressed: () async {
                                       if (_formKey.currentState!.validate()) {
                                         List<Ingredient> updatedIngredients =
                                             List.generate(
@@ -333,13 +335,36 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                                 );
                                               },
                                             );
+                                        final scaffoldMessenger =
+                                            ScaffoldMessenger.of(context);
+                                        final navigator = Navigator.of(context);
+                                        String? uploadedImageUrl;
+                                        if (imagePath != null) {
+                                          try {
+                                            uploadedImageUrl =
+                                                await uploadService.uploadImage(
+                                                  imagePath!,
+                                                );
+                                          } catch (e) {
+                                            if (!mounted) return;
+                                            scaffoldMessenger.showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Error uploading image: ${e.toString()}',
+                                                ),
+                                              ),
+                                            );
+                                            return;
+                                          }
+                                        }
                                         final newRecipe = FormRecipe(
                                           id: selectedRecipe?.id,
                                           name: nameController.text,
-                                          imageUrl: selectedRecipe?.imageUrl,
+                                          imageUrl:
+                                              uploadedImageUrl ?? imageUrl,
                                           ingredients: updatedIngredients,
                                         );
-                                        Navigator.of(context).pop(newRecipe);
+                                        navigator.pop(newRecipe);
                                       }
                                     },
                                     child: const Text('Save'),

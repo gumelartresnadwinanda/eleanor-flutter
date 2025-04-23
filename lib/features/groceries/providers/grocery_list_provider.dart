@@ -8,6 +8,9 @@ class GroceryListProvider with ChangeNotifier {
   GroceryList? _groceryList;
   GroceryList? get groceryList => _groceryList;
 
+  int? _activeMealPlanId;
+  int? get activeMealPlanId => _activeMealPlanId;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -21,6 +24,18 @@ class GroceryListProvider with ChangeNotifier {
   // Track current view type
   bool _isRecipeView = true;
   bool get isRecipeView => _isRecipeView;
+
+  Future<void> updateActiveMealPlan(int? id) async {
+    try {
+      _activeMealPlanId = id;
+      clearCheckedItems();
+    } catch (e) {
+      throw Exception("Failed to update active meal, error:$e");
+    } finally {
+      notifyListeners();
+    }
+    return;
+  }
 
   Future<void> fetchGroceryList(int mealPlanId) async {
     _isLoading = true;
@@ -59,23 +74,28 @@ class GroceryListProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception(
-          'GROCERY_API_BASE_URL not found in environment variables',
+      if (_activeMealPlanId == null) {
+        final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
+        if (baseUrl == null) {
+          throw Exception(
+            'GROCERY_API_BASE_URL not found in environment variables',
+          );
+        }
+
+        final response = await http.get(
+          Uri.parse('$baseUrl/api/meal-plans/latest-id'),
         );
-      }
 
-      final response = await http.get(
-        Uri.parse('$baseUrl/api/meal-plans/latest-id'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        fetchGroceryList(data['id'] as int);
+        if (response.statusCode == 200) {
+          final data = json.decode(response.body);
+          _activeMealPlanId = data['id'] as int;
+          fetchGroceryList(data['id'] as int);
+        } else {
+          _error =
+              'Failed to load grocery list. Status code: ${response.statusCode}';
+        }
       } else {
-        _error =
-            'Failed to load grocery list. Status code: ${response.statusCode}';
+        fetchGroceryList(activeMealPlanId!);
       }
     } catch (e) {
       _groceryList = GroceryList(recipes: [], ingredients: []);
