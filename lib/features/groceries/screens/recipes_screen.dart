@@ -1,6 +1,7 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:eleanor/core/services/permission_service.dart';
+import 'package:eleanor/core/widgets/image_preview.dart';
 import 'package:eleanor/features/groceries/models/ingredient.dart';
+import 'package:eleanor/features/groceries/models/ingredients_input.dart';
 import 'package:eleanor/features/groceries/models/recipe.dart';
 import 'package:eleanor/features/groceries/models/recipe_list.dart';
 import 'package:eleanor/features/groceries/providers/ingredients_provider.dart';
@@ -9,7 +10,6 @@ import 'package:flutter/material.dart';
 import 'package:eleanor/core/widgets/custom_bottom_nav_bar.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
-import 'dart:io';
 import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class GroceriesRecipesScreen extends StatefulWidget {
@@ -88,27 +88,25 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
 
   Future<void> _showRecipeDetail([RecipeList? recipe]) async {
     final provider = Provider.of<RecipesProvider>(context, listen: false);
-    Recipe? selectedRecipe;
-    String? imagePath;
-    String? imageUrl;
-    List<Ingredient>? ingredients;
     final ingredientProvider = Provider.of<IngredientsProvider>(
       context,
       listen: false,
     );
     final ingredientOptions = ingredientProvider.ingredients;
-    List<TextEditingController> controllers = [];
+
+    Recipe? selectedRecipe;
+    String? imagePath;
+    String? imageUrl;
+    List<IngredientInput>? ingredientInputs = [];
+
     if (recipe != null) {
       selectedRecipe = await provider.fetchDetailRecipe(recipe.id);
+      final initialIngredients = selectedRecipe?.ingredients ?? [];
       imageUrl = selectedRecipe?.imageUrl;
-      ingredients = selectedRecipe?.ingredients ?? [];
-      for (var bahan in ingredients) {
-        setState(() {
-          controllers.add(
-            TextEditingController(text: '${bahan.quantity ?? 0}'),
-          );
-        });
-      }
+      ingredientInputs =
+          initialIngredients
+              .map((i) => IngredientInput(ingredient: i))
+              .toList();
       if (!mounted) return;
     }
     final nameController = TextEditingController(
@@ -157,66 +155,15 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                               ),
                               const SizedBox(height: 16),
                               if (imageUrl != null || imagePath != null)
-                                Stack(
-                                  children: [
-                                    Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 8.0,
-                                      ),
-                                      child:
-                                          imagePath != null
-                                              ? Image.file(
-                                                File(imagePath!),
-                                                height: 100,
-                                                width: 100,
-                                                fit: BoxFit.cover,
-                                              )
-                                              : CachedNetworkImage(
-                                                imageUrl: imageUrl ?? '',
-                                                height: 100,
-                                                width: 100,
-                                                fit: BoxFit.cover,
-                                                placeholder:
-                                                    (context, url) => Container(
-                                                      height: 100,
-                                                      width: 100,
-                                                      color: Colors.grey[200],
-                                                      child: const Icon(
-                                                        Icons.image,
-                                                        size: 50,
-                                                      ),
-                                                    ),
-                                                errorWidget:
-                                                    (context, url, error) =>
-                                                        Container(
-                                                          height: 100,
-                                                          width: 100,
-                                                          color:
-                                                              Colors.grey[200],
-                                                          child: const Icon(
-                                                            Icons.error_outline,
-                                                            size: 50,
-                                                          ),
-                                                        ),
-                                              ),
-                                    ),
-                                    Positioned(
-                                      top: 0,
-                                      right: 0,
-                                      child: IconButton(
-                                        icon: const Icon(
-                                          Icons.close,
-                                          color: Colors.red,
-                                        ),
-                                        onPressed: () {
-                                          setState(() {
-                                            imageUrl = null;
-                                            imagePath = null;
-                                          });
-                                        },
-                                      ),
-                                    ),
-                                  ],
+                                ImagePreview(
+                                  imagePath: imagePath,
+                                  imageUrl: imageUrl,
+                                  onRemove: () {
+                                    setState(() {
+                                      imagePath = null;
+                                      imageUrl = null;
+                                    });
+                                  },
                                 ),
                               ElevatedButton.icon(
                                 onPressed: () async {
@@ -239,17 +186,19 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              ...List.generate(ingredients?.length ?? 0, (
+                              ...List.generate(ingredientInputs?.length ?? 0, (
                                 index,
                               ) {
-                                final ingredient = ingredients![index];
+                                final ingredient = ingredientInputs![index];
                                 return Row(
                                   children: [
-                                    Expanded(child: Text(ingredient.name)),
+                                    Expanded(
+                                      child: Text(ingredient.ingredient.name),
+                                    ),
                                     SizedBox(
                                       width: 80,
                                       child: TextField(
-                                        controller: controllers[index],
+                                        controller: ingredient.controller,
                                         keyboardType:
                                             TextInputType.numberWithOptions(
                                               decimal: true,
@@ -269,9 +218,8 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                     IconButton(
                                       onPressed: () {
                                         setState(() {
-                                          ingredients!.removeAt(index);
-                                          controllers[index].dispose();
-                                          controllers.removeAt(index);
+                                          ingredient.dispose();
+                                          ingredientInputs!.removeAt(index);
                                         });
                                       },
                                       icon: const Icon(Icons.delete),
@@ -320,17 +268,18 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                 onSelected: (suggestion) {
                                   print(suggestion.copyWith(quantity: 1));
                                   setState(() {
-                                    ingredients ??= [];
-                                    if (!ingredients!.any(
-                                      (i) => i.id == suggestion.id,
+                                    ingredientInputs ??= [];
+                                    if (!ingredientInputs!.any(
+                                      (i) => i.ingredient.id == suggestion.id,
                                     )) {
-                                      ingredients!.add(
-                                        suggestion.copyWith(quantity: 1),
+                                      ingredientInputs!.add(
+                                        IngredientInput(
+                                          ingredient: suggestion.copyWith(
+                                            quantity: 1,
+                                          ),
+                                        ),
                                       );
                                     }
-                                    controllers.add(
-                                      TextEditingController(text: '1'),
-                                    );
                                     _focusNode.unfocus();
                                   });
                                 },
@@ -352,25 +301,38 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                     ),
                                     onPressed: () {
                                       if (_formKey.currentState!.validate()) {
-                                        List<Ingredient>
-                                        updatedIngredients = List.generate(
-                                          ingredients?.length ?? 0,
-                                          (index) {
-                                            final parsedQuantity =
-                                                double.tryParse(
-                                                  controllers[index].text,
-                                                ) ??
-                                                0;
-                                            return Ingredient(
-                                              id: ingredients![index].id,
-                                              name: ingredients![index].name,
-                                              unit: ingredients![index].unit,
-                                              quantity: parsedQuantity,
-                                              imageUrl:
-                                                  ingredients![index].imageUrl,
+                                        List<Ingredient> updatedIngredients =
+                                            List.generate(
+                                              ingredientInputs?.length ?? 0,
+                                              (index) {
+                                                final parsedQuantity =
+                                                    double.tryParse(
+                                                      ingredientInputs![index]
+                                                          .controller
+                                                          .text,
+                                                    ) ??
+                                                    0;
+                                                return Ingredient(
+                                                  id:
+                                                      ingredientInputs![index]
+                                                          .ingredient
+                                                          .id,
+                                                  name:
+                                                      ingredientInputs![index]
+                                                          .ingredient
+                                                          .name,
+                                                  unit:
+                                                      ingredientInputs![index]
+                                                          .ingredient
+                                                          .unit,
+                                                  quantity: parsedQuantity,
+                                                  imageUrl:
+                                                      ingredientInputs![index]
+                                                          .ingredient
+                                                          .imageUrl,
+                                                );
+                                              },
                                             );
-                                          },
-                                        );
                                         final newRecipe = FormRecipe(
                                           id: selectedRecipe?.id,
                                           name: nameController.text,
@@ -398,19 +360,9 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
 
     if (result != null && mounted) {
       if (recipe == null) {
-        print('Creating new recipe ingredients: ${result.ingredients}');
-        print('Creating new recipe name: ${result.name}');
-        print('Creating new recipe image: ${result.imageUrl}');
-        print('Creating new recipe id: ${result.id}');
-        // await context.read<RecipesProvider>().createIngredient(result);
+        await context.read<RecipesProvider>().createRecipe(result);
       } else {
-        print('Updating new recipe ingredient ${result.ingredients}');
-        print('Updating new recipe name: ${result.name}');
-        print('Updating new recipe image: ${result.imageUrl}');
-        print('Updating new recipe id: ${result.id}');
-      }
-      for (var controller in controllers) {
-        controller.dispose();
+        await context.read<RecipesProvider>().updateRecipe(result);
       }
     }
   }
@@ -455,25 +407,10 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
           return ListTile(
             leading:
                 recipe.imageUrl != null
-                    ? CachedNetworkImage(
+                    ? ImagePreview(
                       imageUrl: recipe.imageUrl,
-                      width: 50,
-                      height: 50,
-                      fit: BoxFit.cover,
-                      placeholder:
-                          (context, url) => Container(
-                            width: 50,
-                            height: 50,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.image, size: 25),
-                          ),
-                      errorWidget:
-                          (context, url, error) => Container(
-                            width: 50,
-                            height: 50,
-                            color: Colors.grey[200],
-                            child: const Icon(Icons.error_outline, size: 25),
-                          ),
+                      dimesion: 50,
+                      size: 25,
                     )
                     : Container(
                       width: 50,

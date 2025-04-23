@@ -46,6 +46,10 @@ class Ingredient {
     };
   }
 
+  Map<String, dynamic> toEssensialJson() {
+    return {"ingredient_id": id, 'quantity': quantity};
+  }
+
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;

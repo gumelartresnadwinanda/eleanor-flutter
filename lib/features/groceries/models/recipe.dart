@@ -77,4 +77,24 @@ class FormRecipe {
     this.imageUrl,
     this.ingredients,
   });
+
+  @override
+  String toString() {
+    return 'Recipe(id: $id, name: $name, imageUrl: $imageUrl, ingredient: ${ingredients.toString()}';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'image_url': imageUrl,
+      'ingredients': ingredients?.map((e) => e.toEssensialJson()).toList(),
+    };
+  }
+
+  Map<String, dynamic> toIngredientsJson() {
+    return {
+      'ingredients': ingredients?.map((e) => e.toEssensialJson()).toList(),
+    };
+  }
 }

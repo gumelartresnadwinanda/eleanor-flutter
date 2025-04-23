@@ -23,18 +23,21 @@ class RecipesProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  String get _baseUrl {
+    final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
+    if (baseUrl == null) {
+      throw Exception('API_BASE_URL not found in environment variables');
+    }
+    return baseUrl;
+  }
+
   Future<void> fetchRecipes() async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception('API_BASE_URL not found in environment variables');
-      }
-
-      final response = await http.get(Uri.parse('$baseUrl/api/recipes'));
+      final response = await http.get(Uri.parse('$_baseUrl/api/recipes'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -84,6 +87,52 @@ class RecipesProvider with ChangeNotifier {
       return null;
     } finally {
       _isDetailLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> createRecipe(FormRecipe recipe) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await http.post(
+        Uri.parse('$_baseUrl/api/recipes'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(recipe.toJson()),
+      );
+      if (response.statusCode == 201) {
+        await fetchRecipes();
+      } else {
+        throw Exception('Failed to create ingredients');
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> updateRecipe(FormRecipe recipe) async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+    try {
+      final response = await http.put(
+        Uri.parse('$_baseUrl/api/recipes/${recipe.id}'),
+        headers: {'Content-Type': 'application/json'},
+        body: json.encode(recipe.toJson()),
+      );
+      if (response.statusCode == 200) {
+        await fetchRecipes();
+      } else {
+        throw Exception('Failed to create ingredients');
+      }
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }
