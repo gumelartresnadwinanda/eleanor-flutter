@@ -3,6 +3,7 @@ import 'package:eleanor/core/widgets/image_preview.dart';
 import 'package:eleanor/features/groceries/providers/grocery_list_provider.dart';
 import 'package:eleanor/features/groceries/providers/meal_plan_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 class MealPlanDetailScreen extends StatefulWidget {
@@ -46,7 +47,14 @@ class _MealPlanDetailScreenState extends State<MealPlanDetailScreen> {
     return Scaffold(
       appBar: AppBar(
         title: Text(title ?? "Detail Menu"),
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.edit))],
+        actions: [
+          IconButton(
+            onPressed: () {
+              context.push("/groceries/meal-plans/form/${widget.id}");
+            },
+            icon: Icon(Icons.edit),
+          ),
+        ],
       ),
       body: body,
       bottomNavigationBar: CustomBottomNavigationBar(currentIndex: 3),
@@ -110,6 +118,7 @@ class _MealPlanDetailScreenState extends State<MealPlanDetailScreen> {
           SliverToBoxAdapter(
             child: Column(
               children: [
+                Divider(),
                 SizedBox(height: 16),
                 Text(
                   "Tambahan",
@@ -148,6 +157,7 @@ class _MealPlanDetailScreenState extends State<MealPlanDetailScreen> {
           SliverToBoxAdapter(
             child: Column(
               children: [
+                Divider(),
                 const SizedBox(height: 16),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8),

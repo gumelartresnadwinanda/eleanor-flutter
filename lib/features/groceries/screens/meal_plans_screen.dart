@@ -74,6 +74,12 @@ class _GroceriesMealPlansScreenState extends State<GroceriesMealPlansScreen> {
           );
         },
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          context.push("/groceries/meal-plans/form/-1");
+        },
+        child: Icon(Icons.add),
+      ),
       bottomNavigationBar: const CustomBottomNavigationBar(currentIndex: 3),
     );
   }

@@ -268,7 +268,6 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                 },
 
                                 onSelected: (suggestion) {
-                                  print(suggestion.copyWith(quantity: 1));
                                   setState(() {
                                     ingredientInputs ??= [];
                                     if (!ingredientInputs!.any(
@@ -298,7 +297,7 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                   SizedBox(width: 8),
                                   ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.lightBlue[200],
+                                      backgroundColor: Colors.lightBlue,
                                       foregroundColor: Colors.white,
                                     ),
                                     onPressed: () async {

@@ -31,6 +31,11 @@ class RecipeList {
     };
   }
 
+  @override
+  String toString() {
+    return "Recipe(id: $id, name: $name, image_url: $imageUrl, default_portion: $defaultPortion)";
+  }
+
   RecipeList copyWith({
     int? id,
     String? name,

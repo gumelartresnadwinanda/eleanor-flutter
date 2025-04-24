@@ -2,11 +2,13 @@ import 'package:flutter/foundation.dart';
 
 @immutable
 class MealPlanMeal {
+  final int id;
   final String name;
   final String? imageUrl;
   final int multiplier;
 
   const MealPlanMeal({
+    required this.id,
     required this.name,
     this.imageUrl,
     required this.multiplier,
@@ -14,6 +16,7 @@ class MealPlanMeal {
 
   factory MealPlanMeal.fromJson(Map<String, dynamic> json) {
     return MealPlanMeal(
+      id: json['id'] as int,
       name: json['name'] as String,
       imageUrl: json['image_url'] as String?,
       multiplier: json['multiplier'] as int,
@@ -21,30 +24,47 @@ class MealPlanMeal {
   }
 
   Map<String, dynamic> toJson() {
-    return {'name': name, 'image_url': imageUrl, 'multiplier': multiplier};
+    return {
+      'id': id,
+      'name': name,
+      'image_url': imageUrl,
+      'multiplier': multiplier,
+    };
   }
 
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
     return other is MealPlanMeal &&
+        other.id == id &&
         other.name == name &&
         other.imageUrl == imageUrl &&
         other.multiplier == multiplier;
   }
 
   @override
-  int get hashCode => Object.hash(name, imageUrl, multiplier);
+  int get hashCode => Object.hash(id, name, imageUrl, multiplier);
 
   MealPlanMeal copyWith({
+    int? id,
     String? name,
     String? Function()? imageUrl,
     int? multiplier,
   }) {
     return MealPlanMeal(
+      id: id ?? this.id,
       name: name ?? this.name,
       imageUrl: imageUrl != null ? imageUrl() : this.imageUrl,
       multiplier: multiplier ?? this.multiplier,
+    );
+  }
+
+  factory MealPlanMeal.fromRecipeJSONtoMealPlanMeal(Map<String, dynamic> json) {
+    return MealPlanMeal(
+      id: json['id'] as int,
+      name: json['name'] as String,
+      imageUrl: json['image_url'] as String?,
+      multiplier: json['multiplier'] as int,
     );
   }
 }
