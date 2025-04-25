@@ -20,20 +20,33 @@ class MealPlanProvider with ChangeNotifier {
   String? _error;
   String? get error => _error;
 
+  String _title = '';
+  String get title => _title;
+
   List<MealPlanExtra> _mealPlanExtras = [];
   List<MealPlanExtra> get mealPlanExtras => List.from(_mealPlanExtras);
 
   List<MealPlanMeal> _mealPlanMeals = [];
   List<MealPlanMeal> get mealPlanMeals => List.from(_mealPlanMeals);
 
+  String get _baseUrl {
+    final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
+    if (baseUrl == null) {
+      throw Exception('API_BASE_URL not found in environment variables');
+    }
+    return baseUrl;
+  }
+
   Future<void> initMealPlanForm(int id) async {
     if (id == -1) {
       _selectedMealPlan = null;
       _mealPlanExtras = [];
       _mealPlanMeals = [];
+      _title = '';
     } else {
       _mealPlanMeals = List.from(selectedMealPlan?.meals ?? []);
       _mealPlanExtras = List.from(selectedMealPlan?.extras ?? []);
+      _title = selectedMealPlan?.title ?? '';
     }
 
     notifyListeners();
@@ -76,9 +89,35 @@ class MealPlanProvider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> confirmMealPlan() async {
-    print("");
-    print("");
+  Future<void> confirmMealPlan(
+    Map<String, String>? currentValue,
+    int id,
+  ) async {
+    final formTitle = currentValue?['title'] ?? selectedMealPlan?.title ?? '';
+    final meals = mealPlanMeals.map((m) => m.id).toList();
+    final extras =
+        mealPlanExtras.map((e) {
+          return IngredientMealPlanFormData(
+            id: e.id,
+            quantity:
+                double.tryParse(
+                  (currentValue?['quantity-${e.id}'] ?? '1').toString(),
+                ) ??
+                1.0,
+          );
+        }).toList();
+
+    final body = MealPlanFormData(
+      title: formTitle,
+      meals: meals,
+      extraItems: extras,
+    );
+
+    if (id == -1) {
+      createMealPlan(body);
+    } else {
+      updateMealPlan(body, id);
+    }
   }
 
   Future<void> fetchMealPlans() async {
@@ -87,12 +126,7 @@ class MealPlanProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception('API_BASE_URL not found in environment variables');
-      }
-
-      final response = await http.get(Uri.parse('$baseUrl/api/meal-plans'));
+      final response = await http.get(Uri.parse('$_baseUrl/api/meal-plans'));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -142,63 +176,56 @@ class MealPlanProvider with ChangeNotifier {
     }
   }
 
-  Future<void> createMealPlan(String title) async {
-    _isLoading = true;
+  Future<void> createMealPlan(MealPlanFormData data) async {
+    _isLoading = false;
     _error = null;
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception('API_BASE_URL not found in environment variables');
-      }
-
       final response = await http.post(
-        Uri.parse('$baseUrl/meal-plans'),
+        Uri.parse('$_baseUrl/api/meal-plans/complete'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'title': title}),
+        body: json.encode(data.toJson()),
       );
 
       if (response.statusCode == 201) {
         await fetchMealPlans();
       } else {
-        throw Exception('Failed to create meal plan');
+        throw Exception(
+          'Failed to create meal plan. code:${response.statusCode}',
+        );
       }
     } catch (e) {
       _error = e.toString();
+      print("error:$error");
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  Future<void> updateMealPlan(int id, String title) async {
-    _isLoading = true;
+  Future<void> updateMealPlan(MealPlanFormData data, int id) async {
+    _isLoading = false;
     _error = null;
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception('API_BASE_URL not found in environment variables');
-      }
-
       final response = await http.put(
-        Uri.parse('$baseUrl/meal-plans/$id'),
+        Uri.parse('$_baseUrl/api/meal-plans/$id/complete'),
         headers: {'Content-Type': 'application/json'},
-        body: json.encode({'title': title}),
+        body: json.encode(data.toJson()),
       );
 
       if (response.statusCode == 200) {
-        await fetchMealPlans();
-        if (_selectedMealPlan?.id == id) {
-          await fetchMealPlanDetails(id);
-        }
+        await fetchMealPlanDetails(id);
       } else {
-        throw Exception('Failed to update meal plan');
+        throw Exception(
+          'Failed to update meal plan. code:${response.statusCode}',
+        );
       }
     } catch (e) {
       _error = e.toString();
+      print("error:$error");
     } finally {
       _isLoading = false;
       notifyListeners();
@@ -206,31 +233,26 @@ class MealPlanProvider with ChangeNotifier {
   }
 
   Future<void> archiveMealPlan(int id) async {
-    _isLoading = true;
+    _isLoading = false;
     _error = null;
     notifyListeners();
 
     try {
-      final baseUrl = dotenv.env['GROCERY_API_BASE_URL'];
-      if (baseUrl == null) {
-        throw Exception('API_BASE_URL not found in environment variables');
-      }
-
       final response = await http.put(
-        Uri.parse('$baseUrl/meal-plans/$id/archive'),
+        Uri.parse('$_baseUrl/api/meal-plans/$id/archive'),
         headers: {'Content-Type': 'application/json'},
       );
 
       if (response.statusCode == 200) {
         await fetchMealPlans();
-        if (_selectedMealPlan?.id == id) {
-          await fetchMealPlanDetails(id);
-        }
       } else {
-        throw Exception('Failed to archive meal plan');
+        throw Exception(
+          'Failed to archive meal plan. code:${response.statusCode}',
+        );
       }
     } catch (e) {
       _error = e.toString();
+      print("error:$error");
     } finally {
       _isLoading = false;
       notifyListeners();

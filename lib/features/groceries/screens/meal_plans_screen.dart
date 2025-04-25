@@ -31,10 +31,24 @@ class _GroceriesMealPlansScreenState extends State<GroceriesMealPlansScreen> {
   @override
   Widget build(BuildContext context) {
     final groceryProvider = Provider.of<GroceryListProvider>(context);
+    final mealPlanProvider = Provider.of<MealPlanProvider>(
+      context,
+      listen: false,
+    );
     final activeMealPlanId = groceryProvider.activeMealPlanId;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Meal Plans')),
+      appBar: AppBar(
+        title: const Text('Meal Plans'),
+        actions: [
+          IconButton(
+            onPressed: () async {
+              mealPlanProvider.fetchMealPlans();
+            },
+            icon: Icon(Icons.refresh),
+          ),
+        ],
+      ),
       body: Consumer<MealPlanProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {

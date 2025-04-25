@@ -29,6 +29,27 @@ class _MealPlanDetailScreenState extends State<MealPlanDetailScreen> {
     super.dispose();
   }
 
+  Future<bool?> showConfirmationDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder:
+          (context) => AlertDialog(
+            title: const Text('Konfirmasi'),
+            content: const Text('Yakin menghapus Meal Plan ini?'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(false), // cancel
+                child: const Text('Cancel'),
+              ),
+              ElevatedButton(
+                onPressed: () => Navigator.of(context).pop(true), // confirm
+                child: const Text('Confirm'),
+              ),
+            ],
+          ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<MealPlanProvider>(context);
@@ -53,6 +74,17 @@ class _MealPlanDetailScreenState extends State<MealPlanDetailScreen> {
               context.push("/groceries/meal-plans/form/${widget.id}");
             },
             icon: Icon(Icons.edit),
+          ),
+          IconButton(
+            onPressed: () async {
+              final nav = Navigator.of(context);
+              final confirmed = await showConfirmationDialog(context);
+              if (confirmed == true) {
+                await provider.archiveMealPlan(widget.id);
+              }
+              nav.pop();
+            },
+            icon: Icon(Icons.delete),
           ),
         ],
       ),

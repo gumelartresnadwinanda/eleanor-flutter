@@ -1,3 +1,4 @@
+import 'package:eleanor/core/providers/form_controller_provider.dart';
 import 'package:eleanor/core/widgets/custom_bottom_nav_bar.dart';
 import 'package:eleanor/core/widgets/image_preview.dart';
 import 'package:eleanor/features/groceries/models/ingredient.dart';
@@ -19,15 +20,27 @@ class MealPlanFormScreen extends StatefulWidget {
 
 class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
   final ScrollController _scrollController = ScrollController();
+  final _formKey = GlobalKey<FormState>();
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
+    Future.microtask(() async {
       if (!mounted) return;
       context.read<RecipesProvider>().fetchRecipes();
       context.read<IngredientsProvider>().fetchIngredients();
-      context.read<MealPlanProvider>().initMealPlanForm(widget.id);
+      final mealPlanProvider = context.read<MealPlanProvider>();
+      await mealPlanProvider.initMealPlanForm(widget.id);
+      if (!mounted) return;
+      final formProvider = context.read<FormControllerProvider>();
+      formProvider.disposeControllers();
+      formProvider.setInitialValue('title', mealPlanProvider.title);
+      for (final extra in mealPlanProvider.mealPlanExtras) {
+        formProvider.setInitialValue(
+          "quantity-${extra.id}",
+          '${extra.quantity}',
+        );
+      }
     });
   }
 
@@ -139,6 +152,11 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     );
     if (result != null) {
       mealPlanProvider.addMealPlanExtra(result);
+      if (!mounted) return;
+      context.read<FormControllerProvider>().setInitialValue(
+        'quantity-${result.id}',
+        '1',
+      );
     }
   }
 
@@ -250,160 +268,220 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
   @override
   build(BuildContext context) {
     final provider = Provider.of<MealPlanProvider>(context);
-    final titleText = widget.id != -1 ? "Update" : "Create New Meal Plan";
-    final subtitleText = provider.selectedMealPlan?.title ?? '';
-    return (Scaffold(
-      appBar: AppBar(title: Text("$titleText $subtitleText")),
-      body: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: CustomScrollView(
-          controller: _scrollController,
-          slivers: [
-            SliverList.builder(
-              itemCount: provider.mealPlanMeals.length,
-              itemBuilder: (context, index) {
-                final recipe = provider.mealPlanMeals[index];
-                return (ListTile(
-                  leading:
-                      recipe.imageUrl != null
-                          ? ImagePreview(
-                            imageUrl: recipe.imageUrl,
-                            dimesion: 50,
-                            size: 25,
-                          )
-                          : Container(
-                            width: 50,
-                            height: 50,
-                            color: Colors.grey[200],
-                            child: const Icon(
-                              Icons.image_not_supported,
-                              size: 25,
-                            ),
-                          ),
-                  title: Text(recipe.name),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // ON REMOVE RECIPE
-                          provider.removeMealPlanMeal(index);
-                        },
-                        icon: Icon(Icons.delete_rounded),
-                      ),
-                    ],
+    final formControllerProvider = Provider.of<FormControllerProvider>(
+      context,
+      listen: false,
+    );
+    final titleText =
+        widget.id != -1 ? "Update Meal Plan" : "Create New Meal Plan";
+    return Scaffold(
+      appBar: AppBar(title: Text(titleText)),
+      body: Form(
+        key: _formKey,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: CustomScrollView(
+            controller: _scrollController,
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: TextFormField(
+                    controller: formControllerProvider.getController('title'),
+                    decoration: InputDecoration(labelText: 'Title'),
+                    validator: (value) {
+                      print('value, $value');
+                      if (value == null || value.isEmpty) {
+                        return 'This field is required';
+                      }
+                      return null;
+                    },
                   ),
-                ));
-              },
-            ),
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: ElevatedButton(
-                      onPressed: () => _showRecipeSelection(),
-                      child: const Text("Tambah Menu Makanan"),
-                    ),
-                  ),
-
-                  Divider(),
-                ],
+                ),
               ),
-            ),
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  Text(
-                    "Tambahan",
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-                  ),
-                  SizedBox(height: 16),
-                ],
-              ),
-            ),
-            SliverList.builder(
-              itemCount: provider.mealPlanExtras.length,
-              itemBuilder: (context, index) {
-                final extra = provider.mealPlanExtras[index];
-                return ListTile(
-                  leading:
-                      extra.imageUrl != null
-                          ? ImagePreview(
-                            imageUrl: extra.imageUrl,
-                            dimesion: 50,
-                            size: 25,
-                          )
-                          : Container(
-                            width: 50,
-                            height: 50,
-                            color: Colors.grey[200],
-                            child: const Icon(
-                              Icons.image_not_supported,
+              SliverToBoxAdapter(child: SizedBox(height: 16)),
+              SliverList.builder(
+                itemCount: provider.mealPlanMeals.length,
+                itemBuilder: (context, index) {
+                  final recipe = provider.mealPlanMeals[index];
+                  return (ListTile(
+                    leading:
+                        recipe.imageUrl != null
+                            ? ImagePreview(
+                              imageUrl: recipe.imageUrl,
+                              dimesion: 50,
                               size: 25,
+                            )
+                            : Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 25,
+                              ),
                             ),
-                          ),
-                  title: Text(extra.name),
-                  subtitle: Text("${extra.quantity.toInt()} ${extra.unit}"),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          // ON REMOVE EXTRA
-                          provider.removeMealPlanExtra(index);
-                        },
-                        icon: Icon(Icons.delete_rounded),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-            SliverToBoxAdapter(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.symmetric(horizontal: 8),
-                    child: ElevatedButton(
-                      onPressed: () => _showExtraSelection(),
-                      child: const Text("Tambah Daftar Belanja Tambahan"),
-                    ),
-                  ),
-                  Divider(),
-                  Row(
-                    children: [
-                      Expanded(child: const SizedBox()),
-                      ElevatedButton(
-                        onPressed: () {
-                          context.pop();
-                        },
-                        child: Text("Cancel"),
-                      ),
-                      SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () async {
-                          final nav = Navigator.of(context);
-                          await provider.confirmMealPlan();
-                          nav.pop();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.lightBlue,
-                          foregroundColor: Colors.white,
+                    title: Text(recipe.name),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            // ON REMOVE RECIPE
+                            provider.removeMealPlanMeal(index);
+                          },
+                          icon: Icon(Icons.delete_rounded),
                         ),
-                        child: Text("Save"),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ));
+                },
               ),
-            ),
-          ],
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: ElevatedButton(
+                        onPressed: () => _showRecipeSelection(),
+                        child: const Text("Tambah Menu Makanan"),
+                      ),
+                    ),
+
+                    Divider(),
+                  ],
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    SizedBox(height: 16),
+                    Text(
+                      "Tambahan",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                  ],
+                ),
+              ),
+              SliverList.builder(
+                itemCount: provider.mealPlanExtras.length,
+                itemBuilder: (context, index) {
+                  final extra = provider.mealPlanExtras[index];
+                  return ListTile(
+                    leading:
+                        extra.imageUrl != null
+                            ? ImagePreview(
+                              imageUrl: extra.imageUrl,
+                              dimesion: 50,
+                              size: 25,
+                            )
+                            : Container(
+                              width: 50,
+                              height: 50,
+                              color: Colors.grey[200],
+                              child: const Icon(
+                                Icons.image_not_supported,
+                                size: 25,
+                              ),
+                            ),
+                    title: Text(extra.name),
+
+                    subtitle: Row(
+                      children: [
+                        SizedBox(
+                          width: 80,
+                          child: TextField(
+                            controller: formControllerProvider.getController(
+                              'quantity-${extra.id}',
+                            ),
+                            keyboardType: TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[100],
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 12),
+                        Text(extra.unit),
+                      ],
+                    ),
+                    trailing: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            // ON REMOVE EXTRA
+                            provider.removeMealPlanExtra(index);
+                          },
+                          icon: Icon(Icons.delete_rounded),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      padding: EdgeInsets.symmetric(horizontal: 8),
+                      child: ElevatedButton(
+                        onPressed: () => _showExtraSelection(),
+                        child: const Text("Tambah Daftar Belanja Tambahan"),
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    Divider(),
+                    SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(child: const SizedBox()),
+                        ElevatedButton(
+                          onPressed: () {
+                            context.pop();
+                          },
+                          child: Text("Cancel"),
+                        ),
+                        SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () async {
+                            if (_formKey.currentState!.validate()) {
+                              final nav = Navigator.of(context);
+                              await provider.confirmMealPlan(
+                                formControllerProvider.currentValues,
+                                widget.id,
+                              );
+                              nav.pop();
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.lightBlue,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: Text("Save"),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: CustomBottomNavigationBar(currentIndex: 3),
-    ));
+    );
   }
 }

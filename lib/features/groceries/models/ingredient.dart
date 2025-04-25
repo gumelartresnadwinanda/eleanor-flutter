@@ -80,3 +80,18 @@ class Ingredient {
     );
   }
 }
+
+class IngredientMealPlanFormData {
+  final int id;
+  final double quantity;
+
+  const IngredientMealPlanFormData({required this.id, required this.quantity});
+  @override
+  String toString() {
+    return 'IngredientMealPlanFormData(id: $id, quantity: $quantity)';
+  }
+
+  Map<String, dynamic> toJson() {
+    return {"ingredient_id": id, 'quantity': quantity};
+  }
+}

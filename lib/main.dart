@@ -1,3 +1,4 @@
+import 'package:eleanor/core/providers/form_controller_provider.dart';
 import 'package:eleanor/features/groceries/providers/grocery_list_provider.dart';
 import 'package:eleanor/features/groceries/providers/ingredients_provider.dart';
 import 'package:eleanor/features/groceries/providers/meal_plan_provider.dart';
@@ -5,7 +6,7 @@ import 'package:eleanor/features/groceries/providers/recipes_provider.dart';
 import 'package:eleanor/features/groceries/screens/groceries_screen.dart';
 import 'package:eleanor/features/groceries/screens/ingredients_screen.dart';
 import 'package:eleanor/features/groceries/screens/meal_plan_detail_screen.dart';
-import 'package:eleanor/features/groceries/screens/meal_plan_form.dart';
+import 'package:eleanor/features/groceries/screens/meal_plan_form_screen.dart';
 import 'package:eleanor/features/groceries/screens/meal_plans_screen.dart';
 import 'package:eleanor/features/groceries/screens/recipes_screen.dart';
 import 'package:flutter/material.dart';
@@ -39,6 +40,7 @@ Future<void> main() async {
         ChangeNotifierProvider(create: (context) => IngredientsProvider()),
         ChangeNotifierProvider(create: (context) => RecipesProvider()),
         ChangeNotifierProvider(create: (context) => GroceryListProvider()),
+        ChangeNotifierProvider(create: (context) => FormControllerProvider()),
       ],
       child: const MyApp(),
     ),

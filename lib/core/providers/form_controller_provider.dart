@@ -16,7 +16,7 @@ class FormControllerProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void disposeControllers() {
+  void disposeControllers() async {
     for (final controller in _controllers.values) {
       controller.dispose();
     }
@@ -26,4 +26,13 @@ class FormControllerProvider extends ChangeNotifier {
   Map<String, String> get currentValues => {
     for (var entry in _controllers.entries) entry.key: entry.value.text,
   };
+
+  @override
+  void dispose() {
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
+    _controllers.clear();
+    super.dispose();
+  }
 }

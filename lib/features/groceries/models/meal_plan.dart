@@ -1,3 +1,4 @@
+import 'package:eleanor/features/groceries/models/ingredient.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -224,5 +225,25 @@ class MealPlan {
       meals: meals ?? this.meals,
       extras: extras ?? this.extras,
     );
+  }
+}
+
+class MealPlanFormData {
+  final String title;
+  final List<int> meals;
+  final List<IngredientMealPlanFormData> extraItems;
+
+  const MealPlanFormData({
+    required this.title,
+    required this.meals,
+    required this.extraItems,
+  });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'title': title,
+      'meals': meals.map((e) => e).toList(),
+      'extra_items': extraItems.map((e) => e.toJson()).toList(),
+    };
   }
 }
