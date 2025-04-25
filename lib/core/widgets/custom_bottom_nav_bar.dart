@@ -24,6 +24,10 @@ class CustomBottomNavigationBar extends StatelessWidget {
           label: 'Food Journal',
         ),
         const BottomNavigationBarItem(
+          icon: Icon(Icons.shopping_cart),
+          label: 'Groceries',
+        ),
+        const BottomNavigationBarItem(
           icon: Icon(Icons.settings),
           label: 'Settings',
         ),
@@ -40,6 +44,8 @@ class CustomBottomNavigationBar extends StatelessWidget {
           case 2:
             targetLocation = '/food-journal';
           case 3:
+            targetLocation = '/groceries';
+          case 4:
             targetLocation = '/settings';
           default:
             targetLocation = '/';

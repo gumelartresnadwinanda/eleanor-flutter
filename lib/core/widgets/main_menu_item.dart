@@ -28,7 +28,7 @@ class MenuTile extends StatelessWidget {
         child: Column(
           children: [
             SizedBox(
-              height: 150,
+              height: 100,
               width: double.infinity,
               child: ClipRRect(
                 borderRadius: const BorderRadius.only(
