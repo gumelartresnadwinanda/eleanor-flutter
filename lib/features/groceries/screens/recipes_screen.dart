@@ -217,6 +217,7 @@ class _GroceriesRecipesScreenState extends State<GroceriesRecipesScreen> {
                                         ),
                                       ),
                                     ),
+                                    Text(ingredient.ingredient.unit),
                                     IconButton(
                                       onPressed: () {
                                         setState(() {

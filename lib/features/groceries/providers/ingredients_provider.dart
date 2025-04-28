@@ -26,13 +26,17 @@ class IngredientsProvider with ChangeNotifier {
     return baseUrl;
   }
 
-  Future<void> fetchIngredients() async {
+  Future<void> fetchIngredients({bool? isExtra}) async {
     _isLoading = true;
     _error = null;
     notifyListeners();
 
     try {
-      final response = await http.get(Uri.parse('$_baseUrl/api/ingredients'));
+      final response = await http.get(
+        Uri.parse(
+          '$_baseUrl/api/ingredients?${isExtra != null ? 'is_extra=true' : ''}',
+        ),
+      );
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);

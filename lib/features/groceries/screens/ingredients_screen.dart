@@ -86,6 +86,15 @@ class _GroceriesIngredientsScreenState
   Future<void> _showIngredientDialog([Ingredient? ingredient]) async {
     final nameController = TextEditingController(text: ingredient?.name ?? '');
     final unitController = TextEditingController(text: ingredient?.unit ?? '');
+    final unitPurchaseController = TextEditingController(
+      text: ingredient?.unitPurchase ?? '',
+    );
+    final minimumPurchaseController = TextEditingController(
+      text: '${ingredient?.minimumPurchase}',
+    );
+    final comparisonScaleController = TextEditingController(
+      text: '${ingredient?.comparisonScale}',
+    );
     String? imagePath;
     String? imageUrl = ingredient?.imageUrl;
     final uploadService = UploadService();
@@ -178,7 +187,49 @@ class _GroceriesIngredientsScreenState
                         TextField(
                           controller: unitController,
                           decoration: InputDecoration(
-                            labelText: 'Unit',
+                            labelText: 'Satuan Masak',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: unitPurchaseController,
+                          decoration: InputDecoration(
+                            labelText: 'Satuan Pembelian',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: minimumPurchaseController,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Minimum Pembelian',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            filled: true,
+                            fillColor: Colors.grey[100],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        TextField(
+                          controller: comparisonScaleController,
+                          keyboardType: TextInputType.numberWithOptions(
+                            decimal: true,
+                          ),
+                          decoration: InputDecoration(
+                            labelText: 'Perbandingan Satuan',
                             border: OutlineInputBorder(
                               borderRadius: BorderRadius.circular(8),
                             ),
@@ -243,6 +294,13 @@ class _GroceriesIngredientsScreenState
                           id: ingredient?.id ?? 1,
                           name: nameController.text,
                           unit: unitController.text,
+                          unitPurchase: unitPurchaseController.text,
+                          comparisonScale:
+                              double.tryParse(comparisonScaleController.text) ??
+                              1,
+                          minimumPurchase:
+                              double.tryParse(comparisonScaleController.text) ??
+                              1,
                           imageUrl: uploadedImageUrl ?? imageUrl,
                         );
                         navigator.pop(newIngredient);

@@ -5,6 +5,9 @@ class Ingredient {
   final int id;
   final String name;
   final double? quantity;
+  final double? comparisonScale;
+  final double? minimumPurchase;
+  final String? unitPurchase;
   final String unit;
   final String? imageUrl;
 
@@ -14,6 +17,9 @@ class Ingredient {
     this.quantity,
     required this.unit,
     this.imageUrl,
+    this.unitPurchase,
+    this.comparisonScale,
+    this.minimumPurchase,
   });
 
   factory Ingredient.fromJson(Map<String, dynamic> json) {
@@ -21,7 +27,10 @@ class Ingredient {
       id: json['id'] as int,
       name: json['name'] as String,
       quantity: (json['quantity'] ?? json['total_quantity']).toDouble(),
+      comparisonScale: ((json['comparison_scale'] ?? 1).toDouble()),
+      minimumPurchase: ((json['minimum_purchase'] ?? 1).toDouble()),
       unit: json['unit'] as String,
+      unitPurchase: json['unit_purchase'] ?? json['unit'] as String,
       imageUrl: json['image_url'] as String?,
     );
   }
@@ -31,7 +40,10 @@ class Ingredient {
       id: json['id'] as int,
       name: json['name'] as String,
       quantity: 0,
+      comparisonScale: ((json['comparison_scale'] ?? 1).toDouble()),
+      minimumPurchase: ((json['minimum_purchase'] ?? 1).toDouble()),
       unit: json['unit'] as String,
+      unitPurchase: json['unit_purchase'] ?? json['unit'] as String,
       imageUrl: json['image_url'] as String?,
     );
   }
@@ -41,6 +53,9 @@ class Ingredient {
       "id": id,
       'name': name,
       'quantity': quantity,
+      'comparison_scale': comparisonScale,
+      'minimum_purchase': minimumPurchase,
+      'unit_purchase': unitPurchase,
       'unit': unit,
       'image_url': imageUrl,
     };
@@ -57,17 +72,28 @@ class Ingredient {
   }
 
   @override
-  int get hashCode => Object.hash(name, quantity, unit, imageUrl);
+  int get hashCode => Object.hash(
+    name,
+    quantity,
+    unit,
+    imageUrl,
+    comparisonScale,
+    unitPurchase,
+    minimumPurchase,
+  );
 
   @override
   String toString() {
-    return 'Ingredient(id: $id, name: $name, unit:$unit, quantity:$quantity)';
+    return 'Ingredient(id: $id, name: $name, unit:$unit, quantity:$quantity, unit_purchase:$unitPurchase, comparison_scale:$comparisonScale, minimum_purchase:$minimumPurchase)';
   }
 
   Ingredient copyWith({
     int? id,
     String? name,
     double? quantity,
+    double? minimumPurchase,
+    double? comparisonScale,
+    String? unitPurchase,
     String? unit,
     String? Function()? imageUrl,
   }) {
@@ -75,6 +101,9 @@ class Ingredient {
       id: id ?? this.id,
       name: name ?? this.name,
       quantity: quantity ?? this.quantity,
+      minimumPurchase: minimumPurchase ?? this.minimumPurchase,
+      comparisonScale: comparisonScale ?? this.comparisonScale,
+      unitPurchase: unitPurchase ?? this.unitPurchase,
       unit: unit ?? this.unit,
       imageUrl: imageUrl != null ? imageUrl() : this.imageUrl,
     );

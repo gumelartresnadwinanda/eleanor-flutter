@@ -77,6 +77,7 @@ class MealPlanExtra {
   final double quantity;
   final String unit;
   final String? imageUrl;
+  final double? comparisonScale;
 
   const MealPlanExtra({
     required this.id,
@@ -84,6 +85,7 @@ class MealPlanExtra {
     required this.quantity,
     required this.unit,
     this.imageUrl,
+    this.comparisonScale,
   });
 
   factory MealPlanExtra.fromJson(Map<String, dynamic> json) {
@@ -91,8 +93,9 @@ class MealPlanExtra {
       id: json['id'] as int,
       name: json['name'] as String,
       quantity: (json['quantity'] as num).toDouble(),
+      comparisonScale: ((json['comparison_scale'] ?? 1) as num).toDouble(),
       unit: json['unit'] as String,
-      imageUrl: json['image_url'] as String,
+      imageUrl: json['image_url'] as String?,
     );
   }
 
@@ -101,6 +104,7 @@ class MealPlanExtra {
       'id': id,
       'name': name,
       'quantity': quantity,
+      'comparison_scale': comparisonScale,
       'unit': unit,
       'image_url': imageUrl,
     };
@@ -113,12 +117,14 @@ class MealPlanExtra {
         other.id == id &&
         other.name == name &&
         other.quantity == quantity &&
+        other.comparisonScale == comparisonScale &&
         other.unit == unit &&
         other.imageUrl == imageUrl;
   }
 
   @override
-  int get hashCode => Object.hash(id, name, quantity, unit, imageUrl);
+  int get hashCode =>
+      Object.hash(id, name, quantity, unit, imageUrl, comparisonScale);
 
   MealPlanExtra copyWith({
     int? id,
@@ -126,6 +132,7 @@ class MealPlanExtra {
     double? quantity,
     String? unit,
     String? imageUrl,
+    double? comparisonScale,
   }) {
     return MealPlanExtra(
       id: id ?? this.id,
@@ -133,6 +140,7 @@ class MealPlanExtra {
       quantity: quantity ?? this.quantity,
       unit: unit ?? this.unit,
       imageUrl: imageUrl ?? this.imageUrl,
+      comparisonScale: comparisonScale ?? this.comparisonScale,
     );
   }
 }

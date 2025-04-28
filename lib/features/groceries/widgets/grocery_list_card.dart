@@ -94,7 +94,7 @@ class _GroceryListCardState extends State<GroceryListCard> {
                     ),
                   ),
                   subtitle: Text(
-                    '${ingredient.quantity} ${ingredient.unit}',
+                    '${(ingredient.quantity! % 1 == 0 ? ingredient.quantity!.toInt() : ingredient.quantity!.toStringAsFixed(2))} ${ingredient.unit}',
                     style: TextStyle(
                       fontSize: 12,
                       decoration: isChecked ? TextDecoration.lineThrough : null,

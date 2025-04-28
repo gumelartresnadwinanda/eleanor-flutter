@@ -77,6 +77,7 @@ class MealPlanProvider with ChangeNotifier {
         name: extra.name,
         unit: extra.unit,
         quantity: 1,
+        comparisonScale: extra.comparisonScale,
         imageUrl: extra.imageUrl,
       );
       _mealPlanExtras.add(newExtra);
@@ -97,11 +98,15 @@ class MealPlanProvider with ChangeNotifier {
     final meals = mealPlanMeals.map((m) => m.id).toList();
     final extras =
         mealPlanExtras.map((e) {
+          final multiplier = e.comparisonScale ?? 1;
           return IngredientMealPlanFormData(
             id: e.id,
             quantity:
                 double.tryParse(
-                  (currentValue?['quantity-${e.id}'] ?? '1').toString(),
+                  ((double.tryParse(currentValue?['quantity-${e.id}'] ?? '1')
+                              as num) *
+                          (multiplier))
+                      .toString(),
                 ) ??
                 1.0,
           );

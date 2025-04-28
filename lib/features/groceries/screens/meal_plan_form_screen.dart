@@ -28,7 +28,7 @@ class _MealPlanFormScreenState extends State<MealPlanFormScreen> {
     Future.microtask(() async {
       if (!mounted) return;
       context.read<RecipesProvider>().fetchRecipes();
-      context.read<IngredientsProvider>().fetchIngredients();
+      context.read<IngredientsProvider>().fetchIngredients(isExtra: true);
       final mealPlanProvider = context.read<MealPlanProvider>();
       await mealPlanProvider.initMealPlanForm(widget.id);
       if (!mounted) return;
