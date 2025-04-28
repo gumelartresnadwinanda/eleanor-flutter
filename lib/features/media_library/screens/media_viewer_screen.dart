@@ -1,3 +1,4 @@
+import 'package:eleanor/features/media_library/providers/tag_media_library_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/media_item.dart';
@@ -8,8 +9,9 @@ import 'package:go_router/go_router.dart';
 
 class MediaViewerScreen extends StatefulWidget {
   final String initialMediaId;
+  final String? tag;
 
-  const MediaViewerScreen({super.key, required this.initialMediaId});
+  const MediaViewerScreen({super.key, required this.initialMediaId, this.tag});
 
   @override
   State<MediaViewerScreen> createState() => _MediaViewerScreenState();
@@ -27,7 +29,12 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
   void initState() {
     super.initState();
     final provider = context.read<MediaLibraryProvider>();
-    _allItems = provider.mediaItems;
+    final tagProvider = context.read<TagMediaLibraryProvider>();
+    if (widget.tag != null) {
+      _allItems = tagProvider.tagMediaItems[widget.tag]?.mediaItems ?? [];
+    } else {
+      _allItems = provider.mediaItems;
+    }
 
     _currentIndex = _allItems.indexWhere(
       (item) => item.id == widget.initialMediaId,

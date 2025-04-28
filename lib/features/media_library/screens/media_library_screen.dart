@@ -108,6 +108,20 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
               );
             },
           ),
+          IconButton(
+            icon: Icon(
+              context.select((MediaLibraryProvider p) => p.order) ==
+                      SortOrder.asc
+                  ? Icons.north
+                  : Icons.south,
+            ),
+            onPressed: () {
+              context.read<MediaLibraryProvider>().toggleSortMode(
+                context,
+                widget.tag,
+              );
+            },
+          ),
         ],
       ),
       body: RefreshIndicator(

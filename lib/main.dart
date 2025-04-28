@@ -179,6 +179,27 @@ final _router = GoRouter(
         );
       },
     ),
+    GoRoute(
+      path: '/media/:id/:tag',
+      pageBuilder: (context, state) {
+        final String? id = state.pathParameters['id'];
+        final String? tag = state.pathParameters['tag'];
+        if (id == null) {
+          return buildPageWithNoTransition(
+            context: context,
+            state: state,
+            child: const Scaffold(
+              body: Center(child: Text('Error: Media ID missing')),
+            ),
+          );
+        }
+        return buildPageWithNoTransition(
+          context: context,
+          state: state,
+          child: MediaViewerScreen(initialMediaId: id, tag: tag),
+        );
+      },
+    ),
 
     GoRoute(
       path: '/groceries',

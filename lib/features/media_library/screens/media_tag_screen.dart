@@ -160,6 +160,20 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
               );
             },
           ),
+          IconButton(
+            icon: Icon(
+              context.select((TagMediaLibraryProvider p) => p.order) ==
+                      SortOrder.asc
+                  ? Icons.north
+                  : Icons.south,
+            ),
+            onPressed: () {
+              context.read<TagMediaLibraryProvider>().toggleSortMode(
+                context,
+                widget.tag,
+              );
+            },
+          ),
         ],
       ),
       body: RefreshIndicator(
@@ -361,6 +375,6 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
   }
 
   void _navigateToViewer(BuildContext context, MediaItem item) {
-    context.push('/media/${item.id}');
+    context.push('/media/${item.id}/${widget.tag}');
   }
 }

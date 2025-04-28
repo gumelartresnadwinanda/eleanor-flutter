@@ -12,6 +12,8 @@ enum ViewMode { grid, list }
 
 enum FileType { all, photo, video }
 
+enum SortOrder { asc, desc }
+
 class MediaLibraryProvider with ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
@@ -37,6 +39,9 @@ class MediaLibraryProvider with ChangeNotifier {
   FileType _fileType = FileType.all;
   FileType get fileType => _fileType;
 
+  SortOrder _order = SortOrder.desc;
+  SortOrder get order => _order;
+
   MediaLibraryProvider() {
     _isLoading = false;
     _mediaItems = [];
@@ -57,6 +62,15 @@ class MediaLibraryProvider with ChangeNotifier {
   void toggleViewMode() {
     _viewMode = _viewMode == ViewMode.grid ? ViewMode.list : ViewMode.grid;
     notifyListeners();
+  }
+
+  void toggleSortMode(BuildContext context, String? tag) {
+    _order = _order == SortOrder.asc ? SortOrder.desc : SortOrder.asc;
+    _currentPage = 1;
+    _hasNextPage = true;
+    _mediaItems = [];
+    notifyListeners();
+    fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
 
   void toggleFileType(BuildContext context, String? tag) {
@@ -117,13 +131,8 @@ class MediaLibraryProvider with ChangeNotifier {
     final protectiveModeParam = settingsProvider.getProtectiveModeParam(
       context,
     );
-    print('Protective Mode Param: $protectiveModeParam');
     final String apiUrl =
-        '$baseUrl/medias?page=$_currentPage&limit=$pageSize&sort_order=desc&file_type=${_fileType.name}$tagParam$protectiveModeParam';
-    developer.log(
-      'Fetching media items from: $apiUrl',
-      name: 'MediaLibraryProvider',
-    );
+        '$baseUrl/medias?page=$_currentPage&limit=$pageSize&sort_order=${order.name}&file_type=${_fileType.name}$tagParam$protectiveModeParam';
     try {
       final authProvider = context.read<AuthProvider>();
       final headers = authProvider.getAuthHeaders();
