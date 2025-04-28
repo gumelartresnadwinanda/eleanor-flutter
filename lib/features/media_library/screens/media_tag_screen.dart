@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:provider/provider.dart';
-import '../providers/media_library_provider.dart';
+import 'package:eleanor/features/media_library/providers/tag_media_library_provider.dart';
 import '../providers/tag_list_provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:go_router/go_router.dart';
@@ -35,7 +35,7 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
 
   void _fetchInitialData() {
     // Fetch media items for the tag
-    context.read<MediaLibraryProvider>().fetchMediaItems(
+    context.read<TagMediaLibraryProvider>().fetchMediaItems(
       isInitialLoad: true,
       context: context,
       tag: widget.tag,
@@ -134,27 +134,27 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
         actions: [
           IconButton(
             icon: Icon(
-              context.select((MediaLibraryProvider p) => p.viewMode) ==
+              context.select((TagMediaLibraryProvider p) => p.viewMode) ==
                       ViewMode.grid
                   ? Icons.list
                   : Icons.grid_view,
             ),
             onPressed: () {
-              context.read<MediaLibraryProvider>().toggleViewMode();
+              context.read<TagMediaLibraryProvider>().toggleViewMode();
             },
           ),
           IconButton(
             icon: Icon(
-              context.select((MediaLibraryProvider p) => p.fileType) ==
+              context.select((TagMediaLibraryProvider p) => p.fileType) ==
                       FileType.all
                   ? Icons.photo_library
-                  : context.select((MediaLibraryProvider p) => p.fileType) ==
+                  : context.select((TagMediaLibraryProvider p) => p.fileType) ==
                       FileType.photo
                   ? Icons.photo
                   : Icons.videocam,
             ),
             onPressed: () {
-              context.read<MediaLibraryProvider>().toggleFileType(
+              context.read<TagMediaLibraryProvider>().toggleFileType(
                 context,
                 widget.tag,
               );
@@ -165,7 +165,7 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
       body: RefreshIndicator(
         onRefresh: () async {
           final fetchMedia = context
-              .read<MediaLibraryProvider>()
+              .read<TagMediaLibraryProvider>()
               .fetchMediaItems(
                 isInitialLoad: true,
                 context: context,
@@ -196,17 +196,24 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
   }
 
   Widget _buildContent(BuildContext context) {
-    final isLoading = context.select((MediaLibraryProvider p) => p.isLoading);
-    final errorMessage = context.select(
-      (MediaLibraryProvider p) => p.errorMessage,
+    final isLoading = context.select(
+      (TagMediaLibraryProvider p) => p.isLoading,
     );
-    final items = context.select((MediaLibraryProvider p) => p.mediaItems);
-    final viewMode = context.select((MediaLibraryProvider p) => p.viewMode);
+    final errorMessage = context.select(
+      (TagMediaLibraryProvider p) => p.errorMessage,
+    );
+    final items = context.select(
+      (TagMediaLibraryProvider p) =>
+          p.tagMediaItems[widget.tag]?.mediaItems ?? [],
+    );
+    final viewMode = context.select((TagMediaLibraryProvider p) => p.viewMode);
     final hasNextPage = context.select(
-      (MediaLibraryProvider p) => p.hasNextPage,
+      (TagMediaLibraryProvider p) =>
+          p.tagMediaItems[widget.tag]?.hasNextPage ?? false,
     );
     final isFetchingMore = context.select(
-      (MediaLibraryProvider p) => p.isFetchingMore,
+      (TagMediaLibraryProvider p) =>
+          p.tagMediaItems[widget.tag]?.isFetchingMore ?? false,
     );
 
     if (isLoading && items.isEmpty) {
@@ -276,7 +283,7 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
               padding: const EdgeInsets.all(16.0),
               child: ElevatedButton(
                 onPressed: () {
-                  context.read<MediaLibraryProvider>().fetchMediaItems(
+                  context.read<TagMediaLibraryProvider>().fetchMediaItems(
                     context: context,
                     tag: widget.tag,
                   );

@@ -9,6 +9,7 @@ import 'package:eleanor/features/groceries/screens/meal_plan_detail_screen.dart'
 import 'package:eleanor/features/groceries/screens/meal_plan_form_screen.dart';
 import 'package:eleanor/features/groceries/screens/meal_plans_screen.dart';
 import 'package:eleanor/features/groceries/screens/recipes_screen.dart';
+import 'package:eleanor/features/media_library/providers/tag_media_library_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -33,6 +34,7 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => MediaLibraryProvider()),
+        ChangeNotifierProvider(create: (context) => TagMediaLibraryProvider()),
         ChangeNotifierProvider(create: (context) => AuthProvider()..init()),
         ChangeNotifierProvider(create: (context) => TagListProvider()),
         ChangeNotifierProvider(create: (context) => SettingsProvider()),
