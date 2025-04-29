@@ -90,10 +90,10 @@ class _GroceriesIngredientsScreenState
       text: ingredient?.unitPurchase ?? '',
     );
     final minimumPurchaseController = TextEditingController(
-      text: '${ingredient?.minimumPurchase}',
+      text: '${ingredient?.minimumPurchase ?? 1}',
     );
     final comparisonScaleController = TextEditingController(
-      text: '${ingredient?.comparisonScale}',
+      text: '${ingredient?.comparisonScale ?? 1}',
     );
     String? imagePath;
     String? imageUrl = ingredient?.imageUrl;

@@ -182,7 +182,7 @@ class _MealPlanDetailScreenState extends State<MealPlanDetailScreen> {
                           ),
                         ),
                 title: Text(extra.name),
-                subtitle: Text("${extra.quantity.toInt()} ${extra.unit}"),
+                subtitle: Text("${extra.quantity.toDouble()} ${extra.unit}"),
               );
             },
           ),
