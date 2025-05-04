@@ -92,6 +92,7 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
               viewMode == ViewMode.grid ? Icons.list : Icons.grid_view,
             ),
             onPressed: toggleViewMode,
+            tooltip: viewMode == ViewMode.grid ? "List" : "Grid",
           ),
           IconButton(
             icon: Icon(
@@ -107,6 +108,12 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
                 widget.tag,
               );
             },
+            tooltip:
+                fileType == FileType.all
+                    ? "All Media Type"
+                    : fileType == FileType.photo
+                    ? "Photo Only"
+                    : "Video Only",
           ),
           IconButton(
             icon: Icon(
@@ -121,6 +128,11 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
                 widget.tag,
               );
             },
+            tooltip:
+                context.select((MediaLibraryProvider p) => p.order) ==
+                        SortOrder.asc
+                    ? "Oldest First"
+                    : "Latest First",
           ),
         ],
       ),

@@ -128,9 +128,15 @@ class _MediaTagScreenState extends State<MediaTagScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final totalCount = context.select(
+      (TagMediaLibraryProvider p) => p.tagMediaItems[widget.tag]?.count ?? 0,
+    );
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.tag),
+        title: Tooltip(
+          message: "($totalCount) ${widget.tag}",
+          child: Text(widget.tag, overflow: TextOverflow.ellipsis, maxLines: 1),
+        ),
         actions: [
           IconButton(
             icon: Icon(

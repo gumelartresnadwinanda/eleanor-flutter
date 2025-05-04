@@ -19,6 +19,7 @@ class MediaTag {
   int _currentPage = 1; // Private field
   bool _hasNextPage = true; // Private field
   bool _isFetchingMore = false; // Private field
+  int _count = 0;
 
   List<MediaItem> get mediaItems => _mediaItems;
   set smediaItems(List<MediaItem> items) {
@@ -38,6 +39,11 @@ class MediaTag {
   bool get isFetchingMore => _isFetchingMore;
   set sisFetchingMore(bool value) {
     _isFetchingMore = value;
+  }
+
+  int get count => _count;
+  set scount(int value) {
+    _count = value;
   }
 
   MediaTag({
@@ -144,7 +150,7 @@ class TagMediaLibraryProvider with ChangeNotifier {
     await fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
   }
 
-  static const int pageSize = 50;
+  static const int pageSize = 100;
 
   Future<void> fetchMediaItems({
     bool isInitialLoad = false,
@@ -227,6 +233,9 @@ class TagMediaLibraryProvider with ChangeNotifier {
           }
 
           final dynamic nextValue = decodedBody['next'];
+          final dynamic totalCount = decodedBody['count'];
+          _tagMediaItems[tag]!.scount = int.parse(totalCount ?? 0);
+
           _tagMediaItems[tag]!.shasNextPage =
               nextValue != null && nextValue.toString().isNotEmpty;
 

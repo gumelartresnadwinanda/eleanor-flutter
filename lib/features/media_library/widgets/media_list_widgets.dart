@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../models/media_item.dart';
 
 class MediaListItem extends StatelessWidget {
@@ -20,7 +21,9 @@ class MediaListItem extends StatelessWidget {
             .map((tag) => tag.trim())
             .where((tag) => tag.isNotEmpty)
             .toList();
-
+    final String formattedDate = DateFormat(
+      'dd MMM yyyy',
+    ).format(mediaItem.date);
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -92,14 +95,26 @@ class MediaListItem extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          mediaItem.title,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                mediaItem.title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Text(
+                              formattedDate,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                         if (tagList.isNotEmpty) ...[
                           const SizedBox(height: 8),
