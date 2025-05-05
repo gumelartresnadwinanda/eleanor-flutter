@@ -15,10 +15,10 @@ enum FileType { all, photo, video }
 enum SortOrder { asc, desc }
 
 class MediaTag {
-  List<MediaItem> _mediaItems = []; // Private field
-  int _currentPage = 1; // Private field
-  bool _hasNextPage = true; // Private field
-  bool _isFetchingMore = false; // Private field
+  List<MediaItem> _mediaItems = [];
+  int _currentPage = 1;
+  bool _hasNextPage = true;
+  bool _isFetchingMore = false;
   int _count = 0;
 
   List<MediaItem> get mediaItems => _mediaItems;
