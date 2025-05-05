@@ -67,6 +67,7 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<MediaLibraryProvider>(context);
     if (_isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
@@ -113,6 +114,75 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
                 elevation: 0,
                 foregroundColor: Colors.white,
                 title: Text(currentItem?.title ?? 'Media Viewer'),
+                actions: [
+                  IconButton(
+                    icon: Icon(Icons.delete),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder:
+                            (context) => AlertDialog(
+                              title: const Text('Delete Media'),
+                              content: const Text(
+                                'Are you sure to delete this media',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text("Cancel"),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    final nav = Navigator.of(context);
+                                    provider.delete(
+                                      id: currentItem?.id,
+                                      withData: false,
+                                    );
+
+                                    if (_currentIndex < _allItems.length) {
+                                      _allItems.removeAt(_currentIndex);
+                                    }
+
+                                    setState(() {
+                                      if (_currentIndex >= _allItems.length &&
+                                          _allItems.isNotEmpty) {
+                                        _currentIndex = _allItems.length - 1;
+                                      }
+                                    });
+                                    nav.pop();
+                                  },
+                                  child: const Text("Yes"),
+                                ),
+                                TextButton(
+                                  onPressed: () async {
+                                    final nav = Navigator.of(context);
+                                    provider.delete(
+                                      id: currentItem?.id,
+                                      withData: true,
+                                    );
+                                    if (_currentIndex < _allItems.length) {
+                                      _allItems.removeAt(_currentIndex);
+                                    }
+
+                                    setState(() {
+                                      if (_currentIndex >= _allItems.length &&
+                                          _allItems.isNotEmpty) {
+                                        _currentIndex = _allItems.length - 1;
+                                      }
+                                    });
+                                    nav.pop();
+                                  },
+                                  child: const Text(
+                                    "Yes, also remove from drive",
+                                  ),
+                                ),
+                              ],
+                            ),
+                      );
+                    },
+                    tooltip: "Delete",
+                  ),
+                ],
               )
               : null,
       body: GestureDetector(

@@ -19,7 +19,7 @@ class MediaLibraryProvider with ChangeNotifier {
   bool get isLoading => _isLoading;
 
   List<MediaItem> _mediaItems = [];
-  List<MediaItem> get mediaItems => List.unmodifiable(_mediaItems);
+  List<MediaItem> get mediaItems => _mediaItems;
 
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
@@ -94,6 +94,18 @@ class MediaLibraryProvider with ChangeNotifier {
     _mediaItems = [];
     notifyListeners();
     await fetchMediaItems(isInitialLoad: true, context: context, tag: tag);
+  }
+
+  Future<void> delete({String? id, bool? withData}) async {
+    final String? baseUrl = dotenv.env['API_BASE_URL'];
+    final String apiUrl = '$baseUrl/medias/$id?deleteWithData=$withData';
+    try {
+      await http.delete(Uri.parse(apiUrl));
+    } catch (e) {
+      _errorMessage = 'Failed to delete media';
+    } finally {
+      notifyListeners();
+    }
   }
 
   static const int pageSize = 50;
