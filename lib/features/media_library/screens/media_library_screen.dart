@@ -115,6 +115,7 @@ class _MediaLibraryScreenState extends State<MediaLibraryScreen> {
                     ? "Photo Only"
                     : "Video Only",
           ),
+          // TODO: Add modal to set sorting field and sorting direction
           IconButton(
             icon: Icon(
               context.select((MediaLibraryProvider p) => p.order) ==

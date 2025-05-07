@@ -51,6 +51,7 @@ class _MediaLibraryHomeScreenState extends State<MediaLibraryHomeScreen> {
     );
   }
 
+  // TODO: Change to homepage like style of menus
   List<Widget> _buildMenuItems() {
     return [
       _buildMenuItem(

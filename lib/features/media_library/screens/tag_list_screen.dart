@@ -120,6 +120,7 @@ class _TagListScreenState extends State<TagListScreen> {
     final isFetchingMore = tagProvider.isFetchingMore;
     final isLoading = tagProvider.isLoading;
     final hasNextPage = tagProvider.hasNextPage;
+    // TODO: Add Search Bar
 
     return Scaffold(
       appBar: AppBar(title: Text('${widget.type.capitalize()} Tags')),
