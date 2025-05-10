@@ -134,6 +134,7 @@ class SettingsScreen extends StatelessWidget {
             ),
             const Divider(),
           ],
+          // TODO: add setting to add excluded tags
           ListTile(
             leading: Container(
               padding: const EdgeInsets.all(8),
