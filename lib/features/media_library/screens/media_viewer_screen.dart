@@ -95,6 +95,7 @@ class _MediaViewerScreenState extends State<MediaViewerScreen> {
             ? _allItems[_currentIndex]
             : null;
 
+    // TODO: add new tag edit screen or modal
     final List<String> tagList =
         currentItem != null
             ? currentItem.tags
